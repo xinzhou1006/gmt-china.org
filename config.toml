@@ -2,7 +2,7 @@ baseURL = "https://gmt-china.org/"
 languageCode = "zh-cmn-Hans"
 title = "GMT 中文社区"
 
-paginate = 10
+paginate = 8
 disablePathToLower = true
 preserveTaxonomyNames = true
 hasCJKLanguage = true
