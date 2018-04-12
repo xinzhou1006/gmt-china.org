@@ -1,7 +1,11 @@
-# hugo output directory
+# hugo
 public/
+.resources
+
 # GMT related files
 *.ps
 gmt.history
 gmt.conf
-.resources
+
+# htmltest
+.htmltest/

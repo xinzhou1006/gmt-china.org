@@ -1,13 +1,19 @@
 language: python
 python: 3.6
 
+cache:
+  directories:
+    - .htmltest
+
 install:
   - curl -L https://raw.githubusercontent.com/seisman/install/master/install-hugo.sh | bash
+  - curl -L https://raw.githubusercontent.com/seisman/install/master/install-htmltest.sh | bash
   - pip install css-html-js-minify
 
 script:
   - ./hugo
   #- ./scripts/css-html-js-minify.py public --overwrite
+  - ./htmltest
 
 deploy:
   provider: pages
