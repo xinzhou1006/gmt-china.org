@@ -1,0 +1,1424 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>GMT中文社区 on GMT 中文社区</title><link>https://gmt-china.org/</link><description>Recent content in GMT中文社区 on GMT 中文社区</description><generator>Hugo -- gohugo.io</generator><language>zh-cmn-Hans</language><managingEditor>admin@gmt-china.org (GMT 中文社区)</managingEditor><webMaster>admin@gmt-china.org (GMT 中文社区)</webMaster><lastBuildDate>Wed, 05 Sep 2018 00:00:00 +0000</lastBuildDate><atom:link href="https://gmt-china.org/index.xml" rel="self" type="application/rss+xml"/><item><title>用两套地形数据绘制檀香山地形图</title><link>https://gmt-china.org/example/ex021/</link><pubDate>Wed, 05 Sep 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex021/</guid><description>&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;数据下载：&lt;a href=&#34;https://gmt-china.org/example/ex021/hawaii_land_1s.grd&#34;&gt;陆地地形文件&lt;/a&gt;
+&lt;a href=&#34;https://gmt-china.org/example/ex021/hawaii_ocean_15s.grd&#34;&gt;海底地形文件&lt;/a&gt;
+&lt;a href=&#34;https://gmt-china.org/example/ex021/hawaii.cpt&#34;&gt;配色文件&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;檀香山是夏威夷主岛火奴鲁鲁的旧称，因孙文为代表的革命党人在这里的革命活动而为华人熟知。&lt;/p&gt;
+&lt;p&gt;现在我们想绘制檀香山的地形。我们希望地形的精度尽可能的高，以得到最清晰的地图。
+目前，免费开放的最精确的地形文件的精度是 1 弧秒，即 30m 一个采样点，但只包含陆地。包含了海洋的地形的精度最高是 15s。
+这样，我们就需要用 1 弧秒的数据来绘制地形，15 弧秒的数据来绘制海底。&lt;/p&gt;
+&lt;p&gt;思路：首先用 15 弧秒的文件绘制檀香山及周围海域（既有陆地，又有海洋）的地形。
+然后，用 1 弧秒的数据去绘制陆地部分的地形。因为 1s 的数据后绘制，就把前面不太准确的 15 弧秒陆地地形覆盖了。
+要实现这个思路的关键在于绘制 1 弧秒数据的时候，怎样才能只覆盖陆地部分，而保留海洋部分。
+实现方法是：gmt 的 pscoast 模块提供了一个 clip 的功能，实现用海岸线进行裁剪。具体请看代码中的注释:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+PS=hawaii.ps
+landdata=hawaii_land_1s.grd
+oceandata=hawaii_ocean_15s.grd
+cpt=hawaii.cpt
+# 设置光照
+gmt grdgradient $landdata -Ne0.7 -A315 -G$landdata.light
+gmt grdgradient $oceandata -Ne0.7 -A315 -G$oceandata.light
+# 底图
+gmt psbasemap -R-156.5/-154.5/18.5/20.5 -JM15c -Baf -BWSEN -K -P &amp;gt; $PS
+# 地形
+# 海洋部分
+gmt grdimage $oceandata -R -J -I$oceandata.light -C$cpt -O -K &amp;gt;&amp;gt; $PS
+# 陆地部分
+gmt pscoast -R -J -Da -Gc -O -K &amp;gt;&amp;gt; $PS # 用最高精度（-Da）的海岸线划出裁剪范围（-Gc）
+gmt grdimage $landdata -R -J -I$landdata.light -C$cpt -O -K &amp;gt;&amp;gt; $PS # 绘制陆地部分地形
+gmt pscoast -O -K -Q &amp;gt;&amp;gt; $PS # 关闭裁剪
+# 文件尾
+gmt psxy -R -J -T -O &amp;gt;&amp;gt; $PS
+# 输出
+gmt psconvert $PS -A -Tg
+rm $PS *.light gmt.history
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;绘图效果如下:&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;hawaii.png&#34; width=&#34;1000px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;夏威夷檀香山&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;</description></item><item><title>GMT 6 的安装 —— 正式推出前体验 GMT 6</title><link>https://gmt-china.org/blog/install-gmt6/</link><pubDate>Fri, 31 Aug 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/install-gmt6/</guid><description>
+&lt;p&gt;GMT 6 计划于今年年底正式发布。GMT 6 完全兼容 GMT 5 并新增了更易用的现代模式，想要提前体验的可以按照如下说明安装 GMT 6 的开发版。&lt;/p&gt;
+&lt;h1 id=&#34;linux-平台&#34;&gt;Linux 平台&lt;/h1&gt;
+&lt;p&gt;使用如下命令获取 GMT 6 开发版源码：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ git clone https://github.com/GenericMappingTools/gmt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;获取源码之后，按照如下步骤即可安装。详细步骤可参考《&lt;a href=&#34;https://docs.gmt-china.org/install/linux/&#34; target=&#34;_blank&#34;&gt;Linux下安装GMT&lt;/a&gt;》一文。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ cd gmt
+$ cp cmake/ConfigUserTemplate.cmake cmake/ConfigUser.cmake
+# Edit cmake/ConfigUser.cmake [见《Linux下安装GMT》一文]
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make -jx
+$ make -jx install
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;macos-平台&#34;&gt;macOS 平台&lt;/h1&gt;
+&lt;p&gt;Mac 用户建议用 homebrew 安装软件。这里提供了一个GMT6的formula。&lt;/p&gt;
+&lt;p&gt;下载地址：&lt;a href=&#34;https://gitlab.com/snippets/1749251/raw?inline=false&#34; target=&#34;_blank&#34;&gt;https://gitlab.com/snippets/1749251/raw?inline=false&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;下载完成后执行如下命令：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;brew unlink gmt # 删除 gmt5
+brew install --HEAD gmt6.rb # 安装 gmt6
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;windows-平台&#34;&gt;Windows 平台&lt;/h1&gt;
+&lt;p&gt;Windows下可以直接使用GMT6安装包。&lt;/p&gt;
+&lt;p&gt;安装包下载地址： &lt;a href=&#34;http://w3.ualg.pt/~jluis/mirone/downloads/gmt.html&#34; target=&#34;_blank&#34;&gt;http://w3.ualg.pt/~jluis/mirone/downloads/gmt.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;安装包文件名格式为 GMT-6.0.0_*.exe。&lt;/p&gt;</description></item><item><title>绘制速度模型</title><link>https://gmt-china.org/example/ex020/</link><pubDate>Wed, 18 Apr 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex020/</guid><description>&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;示例数据:
+&lt;a href=&#34;https://gmt-china.org/example/ex020/model.txt&#34;&gt;速度模型数据&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;本文展示了如何绘制地壳速度模型图。示例数据分为 6 列，分别为 地层厚度，S波速度，P波速度，密度，S波Q值和P波Q值，
+绘图脚本只用到了前 3 列数据。&lt;/p&gt;
+&lt;p&gt;Bash 绘图脚本如下:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+gmt set MAP_TICK_LENGTH_PRIMARY -0.1c
+model=model.txt
+PS=model.ps
+gmt psbasemap -R0/10/0/50 -JX8c/-10c -Bx1&amp;#43;l&amp;#34;Velocity (km/s)&amp;#34; -By10&amp;#43;l&amp;#34;Depth (km)&amp;#34; \
+-BWS&amp;#43;t&amp;#39;Crust model&amp;#39; -K -P &amp;gt; $PS
+gmt psbasemap -R -J -Ben -B0 -K -O &amp;gt;&amp;gt; $PS
+# 利用 awk 计算每一层上下边界的深度，提取该层的速度
+# 每一层上边界的深度即为前几层的厚度累加，下边界的深度为上边界的深度加该层层厚
+# Vs
+awk &amp;#39;BEGIN{d1=0;d2=0}{d2=d2&amp;#43;$1;print $2,d1;print $2,d2;d1=d2;}&amp;#39; $model | \
+gmt psxy -R -J -W1.5p,blue -K -O &amp;gt;&amp;gt; $PS
+# Vp
+awk &amp;#39;BEGIN{d1=0;d2=0}{d2=d2&amp;#43;$1;print $3,d1;print $3,d2;d1=d2;}&amp;#39; $model | \
+gmt psxy -R -J -W1.5p,green,6_2:2 -K -O &amp;gt;&amp;gt; $PS
+gmt pslegend -R -J -DjBL&amp;#43;w2c&amp;#43;o0.2c/0.2c -F -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt;EOF
+S 0.4c - 0.5c - 1p,blue 1c @;blue;Vs@;;
+S 0.4c - 0.5c - 1p,green,6_2:0 1c @;green;Vp@;;
+EOF
+gmt psconvert $PS -A -Tg -Z
+rm gmt*
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;绘图效果如下:&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;model.png&#34; width=&#34;400px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;绘制速度模型&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;</description></item><item><title>2017版1:100万全国标准基础地理数据！你值得拥有</title><link>https://gmt-china.org/blog/national-geographic-database/</link><pubDate>Sun, 15 Apr 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/national-geographic-database/</guid><description>
+&lt;p&gt;本文介绍国家标准地理数据的获取以及处理为 GMT 支持格式的方法，具体包括：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;国家标准1:100万（非涉密）基础地理数据的申请、下载&lt;/li&gt;
+&lt;li&gt;数据集内容简介&lt;/li&gt;
+&lt;li&gt;数据集要素合并、提取&lt;/li&gt;
+&lt;li&gt;借助OGR工具将SHP转为GMT可用格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;alert alert-info&#34; role=&#34;alert&#34;&gt;&lt;p&gt;本文仅供个人科研作图参考。若使用者编制的地图需向社会公开的，请务必遵守《地图管理条例》有关规定依法履行地图审核程序。&lt;/p&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;数据概况&#34;&gt;数据概况&lt;/h2&gt;
+&lt;p&gt;国家基础地理信息中心于2017年11月份开始免费向公众提供全国1:100万非涉密的全国基础地理数据库。目前数据整体现势性为2017年。该数据库：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;共77幅DLG数据集，包括全国陆地范围以及台湾岛、海南岛、钓鱼岛、南海诸岛在内的主要岛屿及其临近海域。&lt;/li&gt;
+&lt;li&gt;包括水系、居民地及设施、公路铁路、行政边界、地名等5个数据集12个数据层，如下图所示。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;figure&gt;
+&lt;img src=&#34;01.datalist.png&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;全国基础地理数据库数据集&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;数据更多介绍可访问&lt;a href=&#34;http://www.webmap.cn/commres.do?method=result100W&#34; target=&#34;_blank&#34;&gt;全国地理信息资源目录服务系统&lt;/a&gt;。&lt;/p&gt;
+&lt;h2 id=&#34;数据获取&#34;&gt;数据获取&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;进入&lt;a href=&#34;http://www.webmap.cn&#34; target=&#34;_blank&#34;&gt;全国地理信息资源目录服务系统&lt;/a&gt;，点右上角“注册”。已注册用户直接登陆。&lt;/li&gt;
+&lt;li&gt;在“数据下载”栏目中，点击进入“1：100万全国基础地理信息数据库”。&lt;/li&gt;
+&lt;li&gt;该数据集下有77个图幅产品，当前最新生产时间是2017年。可选择一两个图幅，或全部选中，加入成果车。&lt;/li&gt;
+&lt;li&gt;结算，填写订单中的个人信息，&lt;strong&gt;验证手机号&lt;/strong&gt;，下载数据。 &lt;strong&gt;注：&lt;/strong&gt;若未提示验证手机，换个firefox浏览器试试。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;数据集内容简介&#34;&gt;数据集内容简介&lt;/h2&gt;
+&lt;p&gt;该数据集包括5类12个要素层，分别为：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;AANP 自然地名（点）图层&lt;/strong&gt;：包括交通要素名、纪念地和古迹名、山名、水系名、海洋地域名、自然地域名等&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;02.AANP.png&#34; alt=&#34;AANP&#34; /&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;AGNP 居民地（点）图层&lt;/strong&gt;：包括各级行政地名和城乡居民地名称等&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;03.AGNP.png&#34; alt=&#34;AGNP&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;该数据集包括首都、省会、直辖市、特别行政区、地级行政区、县级行政区以及乡镇，以识别码CLASS进行区分：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;行政区地名&lt;/th&gt;
+&lt;th&gt;CLASS码&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;省行政地名(直辖市、自治区、特别行政区)&lt;/td&gt;
+&lt;td&gt;AB&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;自治州、盟、地区行政地名&lt;/td&gt;
+&lt;td&gt;AC&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;地级市行政地名&lt;/td&gt;
+&lt;td&gt;AD&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;县级市行政地名&lt;/td&gt;
+&lt;td&gt;AE&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;县级行政地名（自治县、旗、自治旗、地级市市辖区）&lt;/td&gt;
+&lt;td&gt;AF&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;县辖区及县级行政区域的派出机构地名&lt;/td&gt;
+&lt;td&gt;AG&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;街道办事处地名&lt;/td&gt;
+&lt;td&gt;AH&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;镇行政地名&lt;/td&gt;
+&lt;td&gt;AI&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;乡行政地名&lt;/td&gt;
+&lt;td&gt;AJ&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;BOUA 各级行政区（面）图层&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;04.BOUA.png&#34; alt=&#34;BOUA&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;注：该数据集包含了分幅边界，进行单个行政区（例如某省、市）边界、面积提取时需先合并图层。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;BOUL 中国及邻区各级行政界限（线）图层&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;05.BOUL.png&#34; alt=&#34;BOUL&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;该数据集包括各级行政区界线，以GB码进行区分：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;行政区界类型&lt;/th&gt;
+&lt;th&gt;GB码&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;海岸线&lt;/td&gt;
+&lt;td&gt;250200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;水系交汇处&lt;/td&gt;
+&lt;td&gt;260100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;外国地区国界线&lt;/td&gt;
+&lt;td&gt;610200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;国界线(已定)&lt;/td&gt;
+&lt;td&gt;620201&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;国界线(未定)&lt;/td&gt;
+&lt;td&gt;620202&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;省级界线&lt;/td&gt;
+&lt;td&gt;630200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;特别行政区界&lt;/td&gt;
+&lt;td&gt;630400&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;地、市、州级行政区界&lt;/td&gt;
+&lt;td&gt;640200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;县级行政区界（已定）&lt;/td&gt;
+&lt;td&gt;650201&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;特殊地区界限&lt;/td&gt;
+&lt;td&gt;670202&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;BOUP 领海基点(点)图层&lt;/strong&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;HYDA 水系（面）图层，包括湖泊、水库、双线河流等&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;06.HYDA.png&#34; alt=&#34;HYDA&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;水系数据集以GB码区分：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;水系要素类型&lt;/th&gt;
+&lt;th&gt;GB码&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;地面河流&lt;/td&gt;
+&lt;td&gt;210101&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;时令河&lt;/td&gt;
+&lt;td&gt;210200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;干涸河&lt;/td&gt;
+&lt;td&gt;210300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;湖泊&lt;/td&gt;
+&lt;td&gt;230101&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;池塘&lt;/td&gt;
+&lt;td&gt;230102&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;时令湖&lt;/td&gt;
+&lt;td&gt;230200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;干涸湖&lt;/td&gt;
+&lt;td&gt;230300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;建成水库&lt;/td&gt;
+&lt;td&gt;240101&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;建设中水库&lt;/td&gt;
+&lt;td&gt;240102&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;HYDL 水系（线）图层，包括单线河流、沟渠、河流结构线等&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;07.HYDL.png&#34; alt=&#34;HYDL&#34; /&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;HYDP 水系（点）图层，包括泉、井等&lt;/strong&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;LRDL 公路（线）图层，包括国道、省道、县道、乡道、其它公路、街道、乡村道路等&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;08.LRDL.png&#34; alt=&#34;LRDL&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;不同行政等级公路数据以GB码进行区分，而不同技术等级以RTEG码区分。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;LRRL 铁路（线）图层&lt;/strong&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;RESA.shp 居民地（面）图层&lt;/strong&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;RESP 居民地（点）图层，包括普通房屋、蒙古包、放牧点等&lt;/strong&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;以上只列出了部分要素的分类编码，更多可参考基础地理信息要素分类与代码（GB/T 13923-2006）。&lt;/p&gt;
+&lt;h2 id=&#34;数据处理&#34;&gt;数据处理&lt;/h2&gt;
+&lt;p&gt;从网站上直接下载的数据是分图幅的 geodatabase(gdb) 数据库文件，如果需要用 GMT 画“全国一张图”，需要：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;合并77个gdb文件中的同类要素&lt;/li&gt;
+&lt;li&gt;提取某类要素中的某个等级数据&lt;/li&gt;
+&lt;li&gt;转为gmt识别的文本格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;gdb数据库文件合并&#34;&gt;gdb数据库文件合并&lt;/h3&gt;
+&lt;p&gt;可以使用FME软件、ArcGIS软件或直接编写Python批处理脚本进行gdb数据的批量合并。前两款软件比较大，若只需要对数据进行简单处理，可以利用Python的&lt;strong&gt;ArcPy&lt;/strong&gt;包进行批处理：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python line-numbers&#34;&gt;# -*- coding: utf-8 -*-
+import os
+import arcpy
+# 77个gdb数据库合并
+def MergeFileGDB(inPath, outPath, outName):
+arcpy.env.workspace = inPath
+mergeFilePath = outPath &amp;#43; os.sep &amp;#43; outName
+print(mergeFilePath)
+workspaces = arcpy.ListWorkspaces(&amp;#34;*&amp;#34;, &amp;#34;FileGDB&amp;#34;)
+for workspace in workspaces:
+print(workspace)
+arcpy.env.workspace = workspace
+mergeFileExist = os.path.exists(mergeFilePath)
+if mergeFileExist:
+featureclasses = arcpy.ListFeatureClasses()
+for fc in featureclasses:
+arcpy.Append_management(fc, os.path.join(outPath &amp;#43; os.sep &amp;#43; outName, os.path.splitext(fc)[0]), &amp;#34;TEST&amp;#34;, &amp;#34;&amp;#34;, &amp;#34;&amp;#34;)
+else:
+arcpy.CreateFileGDB_management(outPath, outName)
+featureclasses = arcpy.ListFeatureClasses()
+for fc in featureclasses:
+arcpy.FeatureClassToFeatureClass_conversion(fc, outPath &amp;#43; os.sep &amp;#43; outName, os.path.splitext(fc)[0])
+# 提取gdb数据库的所有shp图层
+def gdb2shp(out_location, out_name):
+arcpy.env.workspace = out_location &amp;#43; os.sep &amp;#43; out_name
+print(arcpy.env.workspace)
+featureclasses = arcpy.ListFeatureClasses()
+for fc in featureclasses:
+arcpy.CopyFeatures_management(fc, out_location &amp;#43; os.sep &amp;#43; str(fc))
+print(fc)
+in_file = r&amp;#34;F:\from&amp;#34;
+out_location = r&amp;#34;F:\results&amp;#34;
+out_name = &amp;#34;merge.gdb&amp;#34;
+MergeFileGDB(in_file, out_location, out_name)
+gdb2shp(out_location, out_name)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;其中，&lt;code&gt;infile&lt;/code&gt;是77个gdb文件夹的目录，&lt;code&gt;out_location&lt;/code&gt;是合并目录，&lt;code&gt;out_name&lt;/code&gt;是合并为一个gdb数据库文件的名称。ArcPy可以随ArcGIS而安装，也可以单独安装。该代码将分幅的交通、水系、边界等12类要素分别合并为全国一张图，最后转为12个shp文件。&lt;/p&gt;
+&lt;h3 id=&#34;提取某类要素&#34;&gt;提取某类要素&lt;/h3&gt;
+&lt;p&gt;由于每个数据集（一个shp文件）中存在不同等级的要素，而在实际使用中可能需要提取某省的居民地点数据，或仅国界、省界。所以需利用arcpy编程进一步提取。&lt;/p&gt;
+&lt;p&gt;例如：&lt;/p&gt;
+&lt;p&gt;已知行政区划&lt;code&gt;BOUL&lt;/code&gt;图层中GB代码&lt;code&gt;620201&lt;/code&gt;、&lt;code&gt;620202&lt;/code&gt;、&lt;code&gt;250200&lt;/code&gt;分别为已定国界、未定国界和海岸线，编写Python脚本，从&lt;code&gt;BOUL&lt;/code&gt;图层中提取国界及海岸线要素：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python line-numbers&#34;&gt;import arcpy
+infile = r&amp;#34;F:\results &amp;#34;
+arcpy.env.workspace = infile
+qry = &amp;#39;&amp;#34;GB&amp;#34; = 620201 or &amp;#34;GB&amp;#34; = 620202 or &amp;#34;GB&amp;#34; = 250200&amp;#39;
+try:
+arcpy.MakeFeatureLayer_management(&amp;#34;BOUL.shp&amp;#34;, &amp;#34;BOUL_1&amp;#34;)
+arcpy.SelectLayerByAttribute_management(&amp;#34;BOUL_1&amp;#34;, &amp;#34;NEW_SELECTION&amp;#34;, qry)
+arcpy.CopyFeatures_management(&amp;#34;BOUL_1&amp;#34;, &amp;#34;BOUL_1.shp&amp;#34;)
+except:
+print(&amp;#34;An error occured during selection&amp;#34;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;其中，&lt;code&gt;infile&lt;/code&gt;表示行政区划图层&lt;code&gt;BOUL.shp&lt;/code&gt;所在的文件夹。代码运行后，从该图层中提取GB代码为&lt;code&gt;620201&lt;/code&gt;、&lt;code&gt;620202&lt;/code&gt;、&lt;code&gt;250200&lt;/code&gt;的要素，保存到当前目录的&lt;code&gt;BOUL_1.shp&lt;/code&gt;中.&lt;/p&gt;
+&lt;h3 id=&#34;格式转换&#34;&gt;格式转换&lt;/h3&gt;
+&lt;p&gt;利用OGR库将shp文件转化为gmt可用的文本文件，具体可参考博文&lt;a href=&#34;https://gmt-china.org/blog/gdal-ogr/&#34;&gt;GDAL/OGR: 地理空间数据格式转换神器&lt;/a&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;ogr2ogr -f GMT BOUL_1.gmt BOUL_1.shp
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最后GMT绘图如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;gmt psxy BOUL_1.gmt -R70/145/3/55 -JM105/35/6.5i &amp;gt; ChinaMap.ps
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;绘图结果如下：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;09.ChinaMap.png&#34; alt=&#34;ChinaMap&#34; /&gt;&lt;/p&gt;</description></item><item><title>GMT6 要来啦 — GMT 各版本间的差异</title><link>https://gmt-china.org/blog/gmt-versions/</link><pubDate>Sat, 07 Apr 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/gmt-versions/</guid><description>
+&lt;p&gt;GMT 目前存在如下几个大版本:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.soest.hawaii.edu/gmt/&#34; target=&#34;_blank&#34;&gt;GMT4&lt;/a&gt;：最新版本为 GMT 4.5.18，也是最终版本，已不再维护更新；&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://gmt.soest.hawaii.edu/doc/5.4.4/&#34; target=&#34;_blank&#34;&gt;GMT5&lt;/a&gt;：最新版本为 GMT 5.4.4，是目前的主流版本&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://gmt.soest.hawaii.edu/doc/latest/&#34; target=&#34;_blank&#34;&gt;GMT6&lt;/a&gt;：正在开发中的版本，预计未来一年内会发发布第一个正式版&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;除此之外，GMT 还为其他常用的编程语言提供了方便的接口：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/GenericMappingTools/gmtmex&#34; target=&#34;_blank&#34;&gt;gmtmex&lt;/a&gt;：GMT 的 matlab 接口，基于 GMT5&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/GenericMappingTools/GMT.jl&#34; target=&#34;_blank&#34;&gt;GMT.jl&lt;/a&gt;：GMT 的 Julia 接口，基于 GMT5&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/GenericMappingTools/gmt-python&#34; target=&#34;_blank&#34;&gt;gmt-python&lt;/a&gt;：GMT 的 Python 接口，基于 GMT6&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;GMT6 虽然尚未发布，但其已经足够稳定，可以用于日常使用。最主要的是，GMT6 几乎
+完全兼容 GMT5 的语法，且提供了一种更为简洁易用的新写法。&lt;/p&gt;
+&lt;div class=&#34;alert alert-info&#34; role=&#34;alert&#34;&gt;&lt;p&gt;对 GMT6 有兴趣的 Linux 用户，可以
+根据 &lt;a href=&#34;https://docs.gmt-china.org/appendix/get-gmt-dev/&#34; target=&#34;_blank&#34;&gt;此文&lt;/a&gt; 获取 GMT6 开发版，
+并根据 &lt;a href=&#34;https://docs.gmt-china.org/install/linux/&#34; target=&#34;_blank&#34;&gt;此文&lt;/a&gt; 即可编译安装并试用 GMT6。&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;本文将通过绘制如下一张简单的图片来展示 GMT 不同版本在绘图脚本上的主要差异。
+需要注意，本文不可能详细介绍 GMT 各版本之间的主要差异，本文的主要目的是为了
+演示 GMT6 新语法的简洁性。&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/blog/gmt-versions/gmt-map.png&#34; /&gt;
+&lt;/figure&gt;
+&lt;h2 id=&#34;gmt4&#34;&gt;GMT4&lt;/h2&gt;
+&lt;p&gt;下面的脚本展示了如何在GMT4下绘制上图。脚本中的注释信息简单介绍了每句命令的含义，
+选项的具体含义不是本文重点，不再赘述。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+PS=gmt-map.ps
+J=X10c/10c
+R=0/10/0/10
+# 修改GMT默认参数
+gmtset HEADER_FONT Helvetica-Bold HEADER_FONT_SIZE 24p
+# 写入PS文件头
+psxy -J$J -R$R -K -T &amp;gt; $PS
+# 绘制底图
+psbasemap -J$J -R$R -Ba2f1:X::,km:/a2f1:=$::Y:WSen:.&amp;#34;Simple Basemap&amp;#34;: -K -O &amp;gt;&amp;gt; $PS
+# 绘制两个五角星
+psxy -J$J -R$R -Sa1c -Gred -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+1 1
+2 2
+EOF
+# 绘制线段
+psxy -J$J -R$R -W1p -m -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+&amp;gt; -W2p,red
+3 3
+3.5 4
+&amp;gt; -W2p,blue,-
+4 4
+4 6
+EOF
+# 绘制箭头
+psxy -J$J -R$R -Sv -Gred -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+5 5 30 1
+EOF
+# 绘制地图及其比例尺
+R=70/138/13/56
+J=M105/35/12.4c
+pscoast -J$J -R$R -Df -A1000 -B10/10:.&amp;#39;China Map&amp;#39;: -W1/1p -N1/1p -Lf128/20/20/1000k&amp;#43;u -X12c -K -O &amp;gt;&amp;gt; $PS
+# 写入PS文件尾
+psxy -J$J -R$R -O -T &amp;gt;&amp;gt; $PS
+# 将图片转换为PDF格式
+ps2raster -A -P -Tf $PS
+# 清理当前目录下的临时文件
+rm .gmtdefaults4 .gmtcommands4
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;gmt5&#34;&gt;GMT5&lt;/h2&gt;
+&lt;p&gt;下面的脚本展示了如何在 GMT5 下绘制上图。将 GMT5 与 GMT4 的脚本相比，会发现如下
+几个主要的区别：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;所有 GMT 命令均以 &lt;code&gt;gmt&lt;/code&gt; 开头，以避免与其他同名的命令冲突&lt;/li&gt;
+&lt;li&gt;所有 GMT 参数进行了统一分类与命令，比如与文字相关的参数都名为 &lt;code&gt;FONT_xxx&lt;/code&gt; 、
+与绘图相关的参数都名为 &lt;code&gt;MAP_xxx&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-B&lt;/code&gt; 选项可重复多次使用， &lt;code&gt;-BWSen+t&lt;/code&gt; 用于设置整个底图的属性（标题、背景色等），
+&lt;code&gt;-Bx&lt;/code&gt; 和 &lt;code&gt;-By&lt;/code&gt; 则分别设置 X 轴和 Y 轴的轴属性（刻度、标注、标签、单位、前缀等）。
+相比于 GMT4 而言，条理更加清晰&lt;/li&gt;
+&lt;li&gt;增加了颜色透明功能， &lt;code&gt;red@70&lt;/code&gt; 表示70%透明的红色&lt;/li&gt;
+&lt;li&gt;可以自动处理多段数据，不再需要 &lt;code&gt;-m&lt;/code&gt; 选项&lt;/li&gt;
+&lt;li&gt;绘制箭头的语法不同，新语法有更多的选项，可以得到更多种类的箭头&lt;/li&gt;
+&lt;li&gt;比例尺语法有变化，即 &lt;code&gt;-L&lt;/code&gt; 和 &lt;code&gt;-F&lt;/code&gt; 选项，新语法看上去很复杂，但此语法将比例尺、
+colorbar、指南针等修饰物的语法做了统一，且一旦理解之后，可以很灵活地在图上
+任意位置放置这些修饰物&lt;/li&gt;
+&lt;li&gt;图片转换命令从 &lt;code&gt;ps2raster&lt;/code&gt; 改成了 &lt;code&gt;psconvert&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;配置文件和命令历史文件的文件名变成了 &lt;code&gt;gmt.conf&lt;/code&gt; 和 &lt;code&gt;gmt.history&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+PS=gmt-map.ps
+J=X10c/10c
+R=0/10/0/10
+# 参数名变化
+gmt set FONT_TITLE=24p,Helvetica-Bold
+gmt psxy -J$J -R$R -K -T &amp;gt; $PS
+# -B选项语法不同
+gmt psbasemap -J$J -R$R -Bxaf&amp;#43;lX&amp;#43;u&amp;#39; km&amp;#39; -Byaf&amp;#43;p&amp;#39;$ &amp;#39;&amp;#43;lY -BWSen&amp;#43;t&amp;#34;Simple Basemap&amp;#34; -K -O &amp;gt;&amp;gt; $PS
+# 颜色透明功能
+gmt psxy -J$J -R$R -Sa1c -Gred@70 -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+1 1
+2 2
+EOF
+# 不再需要-m选项
+gmt psxy -J$J -R$R -W1p -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+&amp;gt; -W2p,red
+3 3
+3.5 4
+&amp;gt; -W2p,blue,-
+4 4
+4 6
+EOF
+# 绘制箭头语法改变
+gmt psxy -J$J -R$R -Sv0.4c&amp;#43;e -Gred -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+5 5 30 1
+EOF
+R=70/138/13/56
+J=M105/35/12.4c
+# 绘制比例尺语法改变
+gmt pscoast -J$J -R$R -Df -A1000 -Baf -B&amp;#43;t&amp;#39;China Map&amp;#39; -W1/1p -N1/1p -LjBR&amp;#43;c20&amp;#43;o1c/1c&amp;#43;f&amp;#43;w1000k&amp;#43;u -F&amp;#43;glightblue -X12c -K -O &amp;gt;&amp;gt; $PS
+gmt psxy -J$J -R$R -O -T &amp;gt;&amp;gt; $PS
+# ps2raster 改为 psconvert
+gmt psconvert -A -P -Tf $PS
+# 临时文件的文件名变化
+rm gmt.conf gmt.history
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;gmt6&#34;&gt;GMT6&lt;/h2&gt;
+&lt;p&gt;GMT6 尚未发布，但 GMT6 完全兼容 GMT5。上面的 GMT5 绘图脚本可以不做任何修改地在
+GMT6 下使用。除此之外，GMT6 还引入了一种全新的“现代模式”，大大简化了脚本。&lt;/p&gt;
+&lt;p&gt;GMT6 相对于 GMT5 做了大量简化，列举如下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;所有命令都不再需要 &lt;code&gt;-K&lt;/code&gt; &lt;code&gt;-O&lt;/code&gt;，也不需要使用 &lt;code&gt;&amp;gt;&lt;/code&gt; 或 &lt;code&gt;&amp;gt;&amp;gt;&lt;/code&gt; 重定向到 PS 文件，
+用户完全不需要意识到 PS 文件的存在&lt;/li&gt;
+&lt;li&gt;只要前面的命令使用过 &lt;code&gt;-J&lt;/code&gt; 和 &lt;code&gt;-R&lt;/code&gt; ，则后面的命令不再需要重复 &lt;code&gt;-J&lt;/code&gt; &lt;code&gt;-R&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;以 &lt;code&gt;gmt begin&lt;/code&gt; 开始一张绘图，以 &lt;code&gt;gmt end&lt;/code&gt; 结束一张绘图&lt;/li&gt;
+&lt;li&gt;使用 &lt;code&gt;gmt begin&lt;/code&gt; 时可以指定要生成的图片的文件名以及多种格式&lt;/li&gt;
+&lt;li&gt;命令名有微调（虽然有变化，但旧命令依然可以使用！）
+&lt;ul&gt;
+&lt;li&gt;以 &lt;code&gt;ps&lt;/code&gt; 开头的命令均省略了 &lt;code&gt;ps&lt;/code&gt;，比如 &lt;code&gt;psbasemap&lt;/code&gt; 变成 &lt;code&gt;basemap&lt;/code&gt;、
+&lt;code&gt;pscoast&lt;/code&gt; 变成 &lt;code&gt;coast&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;几个特例： &lt;code&gt;psxy&lt;/code&gt; 变成 &lt;code&gt;plot&lt;/code&gt;， &lt;code&gt;psscale&lt;/code&gt; 变成 &lt;code&gt;colorbar&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;执行 &lt;code&gt;gmt end&lt;/code&gt; 时自动根据 &lt;code&gt;gmt begin&lt;/code&gt; 中的设置生成多种格式的图片&lt;/li&gt;
+&lt;li&gt;不再需要手动清理 &lt;code&gt;gmt.conf&lt;/code&gt; 和 &lt;code&gt;gmt.history&lt;/code&gt; 等临时文件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+# gmt begin 指定图片名为 gmt-map，指定图片格式为pdf、png和jpg
+gmt begin gmt-map pdf,png,jpg
+gmt set FONT_TITLE=24p,Helvetica-Bold
+# psbasemap -&amp;gt; basemap
+# 省略 -K -O &amp;gt;&amp;gt; xxx.ps
+gmt basemap -JX10c/10c -R0/10/0/10 -Bxaf&amp;#43;lX&amp;#43;u&amp;#39; km&amp;#39; -Byaf&amp;#43;p&amp;#39;$ &amp;#39;&amp;#43;lY -BWSen&amp;#43;t&amp;#34;Simple Basemap&amp;#34;
+# psxy -&amp;gt; plot
+# 省略 -J -R -K -O &amp;gt;&amp;gt; xxx.ps
+gmt plot -Sa1c -Gred@70 &amp;lt;&amp;lt; EOF
+1 1
+2 2
+EOF
+gmt plot -W1p &amp;lt;&amp;lt; EOF
+&amp;gt; -W2p,red
+3 3
+3.5 4
+&amp;gt; -W2p,blue,-
+4 4
+4 6
+EOF
+gmt plot -Sv0.4c&amp;#43;e -Gred &amp;lt;&amp;lt; EOF
+5 5 30 1
+EOF
+# pscoast -&amp;gt; coast
+# 省略 -K -O &amp;gt;&amp;gt; xxx.ps
+# 此处绘制了新底图，所以需要再次指定 -J -R
+gmt coast -JM105/35/12.4c -R70/138/13/56 -Df -A1000 -Baf -B&amp;#43;t&amp;#39;China Map&amp;#39; -W1/1p -N1/1p -LjBR&amp;#43;c20&amp;#43;o1c/1c&amp;#43;f&amp;#43;w1000k&amp;#43;u -F&amp;#43;glightblue -X12c
+# gmt end自动生成多种格式的图片
+gmt end
+&lt;/code&gt;&lt;/pre&gt;</description></item><item><title>绘制含地形起伏的地震剖面图</title><link>https://gmt-china.org/example/ex019/</link><pubDate>Sat, 07 Apr 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex019/</guid><description>&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;示例数据:
+&lt;a href=&#34;https://gmt-china.org/example/ex019/event.loc.info&#34;&gt;震中位置数据&lt;/a&gt; |
+&lt;a href=&#34;https://gmt-china.org/example/ex019/beachballs.info&#34;&gt;机制解数据&lt;/a&gt; |
+&lt;a href=&#34;https://gmt-china.org/example/ex019/elev.csv&#34;&gt;海拔数据&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;本文展示了如何同时绘制沿着垂直剖面的海拔变化图、地震分布及震源机制图。&lt;/p&gt;
+&lt;p&gt;Bash 绘图脚本如下:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+PS=profile.ps
+R=0/11/0/700
+J=X5i/-2i
+eqfile=event.loc.info
+nearloc=near.loc
+beachballs=beachballs.info
+elev=elev.csv
+gmt set MAP_FRAME_TYPE plain MAP_FRAME_PEN 0.4p
+gmt set FONT_TITLE 5p MAP_TITLE_OFFSET 8p
+gmt set MAP_ANNOT_OFFSET_PRIMARY 2p FONT_ANNOT_PRIMARY 12p,Times-Roman
+gmt set MAP_TICK_LENGTH_PRIMARY 3p FONT_LABEL 12p MAP_GRID_PEN_PRIMARY 0.2p,gray,--
+gmt set FORMAT_GEO_MAP=ddd:mm:ssF
+# 绘制底图
+gmt psbasemap -R$R -J$J -Bya200f100&amp;#43;l&amp;#34;Focal depth (km)&amp;#34; -Bxa2f1&amp;#43;l&amp;#34;Distance&amp;#34;&amp;#43;u&amp;#34;\260&amp;#34; -BWS -K &amp;gt; $PS
+gmt psbasemap -R -J -B0 -Bne -O -K &amp;gt;&amp;gt; $PS
+# 测线： (130.5,43.5)为起点，(142.5,36.5) 为终点
+# 筛选出距离测线&amp;#43;-1度以内的地震事件
+gmt project $eqfile -C130.5/43.5 -E142.5/36.5 -Fxyzpq -W-1/1 &amp;gt; $nearloc
+# 分深度绘制地震
+awk &amp;#39;$4&amp;gt;=0 &amp;amp;&amp;amp; $4&amp;lt;70 {print $5,$4,$3*0.03}&amp;#39; $nearloc | \
+gmt psxy -R -J -Sc -Gpurple -W0.1p,black -O -K &amp;gt;&amp;gt; $PS
+awk &amp;#39;$4&amp;gt;=70 &amp;amp;&amp;amp; $4&amp;lt;300 {print $5,$4,$3*0.04}&amp;#39; $nearloc |\
+gmt psxy -R -J -Sc -Ggreen -W0.1p,black -K -O &amp;gt;&amp;gt; $PS
+awk &amp;#39;$4&amp;gt;=300 &amp;amp;&amp;amp; $4&amp;lt;1000 {print $5,$4,$3*0.05}&amp;#39; $nearloc |\
+gmt psxy -R -J -Sc -Gred -W0.1p,black -O -K &amp;gt;&amp;gt; $PS
+# 在剖面上绘制部分事件的震源机制
+gmt pscoupe $beachballs -R -J -B -Q -L -Sd0.3 -Aa130.5/43.5/142.5/36.5/90/100/0/700f \
+-Gblack -O -K &amp;gt;&amp;gt; $PS
+# 绘制图例
+gmt pslegend -R -J -DjBR&amp;#43;w1.2i&amp;#43;l1.2&amp;#43;o0.05i/0.04i -F&amp;#43;g255&amp;#43;p0.25p -O -K &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+G 0.01i
+H 12 4 Event (M&amp;gt;4)
+S 0.1i c 0.20 purple 0.1p,black 0.25i 0~70 km
+S 0.1i c 0.20 green 0.1p,black 0.25i 70~300 km
+S 0.1i c 0.20 red 0.1p,black 0.25i &amp;gt;300 km
+EOF
+# 绘制海拔剖面
+elevR=0/1300/-4000/2000
+elevJ=X5i/1i
+gmt psbasemap -R$elevR -J$elevJ -Bya2000f1000&amp;#43;l&amp;#34;Elevation (m)&amp;#34; -Bx0 -BW -Y2i -O -K &amp;gt;&amp;gt; $PS
+# 绘制剖面海拔
+gmt psxy $elev -W0.5p,black -J -Ggray -R -O -K &amp;gt;&amp;gt; $PS
+# 绘制块体分界线
+gmt psxy -W1p,black,- -J -R -O -K &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt;EOF
+&amp;gt;
+102.7 -4000
+102.7 2000
+&amp;gt;
+939 -4000
+939 2000
+&amp;gt;
+1113 -4000
+1113 2000
+&amp;gt;
+1300 -4000
+1300 2000
+EOF
+gmt pstext -N -J -R -F&amp;#43;f16p,blue -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+0 3000 A
+1300 3000 B
+600 1800 SOJP
+1050 1800 JP
+1200 1800 WP
+EOF
+gmt psconvert $PS -A -Tg -E360 -P -Z
+rm gmt.*
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;绘图效果如下:&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;profile.png&#34; width=&#34;800px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;剖面图绘制&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;</description></item><item><title>如何将 bash 脚本改成 bat 脚本</title><link>https://gmt-china.org/blog/bash2bat/</link><pubDate>Sun, 01 Apr 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/bash2bat/</guid><description>&lt;p&gt;社区提供的 GMT 绘图脚本多是基于 Linux 下的 bash 脚本，有相当一部分用户并不熟悉
+bash，因此有必要介绍如何将 bash 脚本改成 Windows 下可用的 bat 脚本。&lt;/p&gt;
+&lt;p&gt;简单来说，将 bash 脚本改成 bat 脚本需要注意以下几点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;注释符号： &lt;code&gt;#&lt;/code&gt; =&amp;gt; &lt;code&gt;rem&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;设置变量： &lt;code&gt;PS=MAP.PS&lt;/code&gt; =&amp;gt; &lt;code&gt;set PS=MAP.PS&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;引用变量： &lt;code&gt;$PS&lt;/code&gt; =&amp;gt; &lt;code&gt;%PS%&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;删除文件： &lt;code&gt;rm gmt.*&lt;/code&gt; =&amp;gt; &lt;code&gt;del gmt.*&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;使用 Notepad++ 编辑器编辑脚本可以很简单地利用 &lt;code&gt;Ctrl+F&lt;/code&gt; 进行搜索替换。
+比如搜索 &lt;code&gt;#&lt;/code&gt; 并全部替换为 &lt;code&gt;rem&lt;/code&gt; ，搜索 &lt;code&gt;$PS&lt;/code&gt; &lt;code&gt;$R&lt;/code&gt; &lt;code&gt;$J&lt;/code&gt; 分别替换为 &lt;code&gt;%PS%&lt;/code&gt; &lt;code&gt;%R%&lt;/code&gt; &lt;code&gt;%J%&lt;/code&gt; 。&lt;/p&gt;
+&lt;p&gt;当然还有一些比较复杂的语句就需要你对 bat 脚本语言比较熟悉。&lt;/p&gt;
+&lt;p&gt;比如 bash 下的嵌套命令可以将一条命令的结果作为变量使用：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;T1=$(gmt grdinfo world6m.grd -T1000)
+gmt makecpt -Crainbow $T1 &amp;gt; 1.cpt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;而在 bat 下就需要用 for 循环来实现：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bat&#34;&gt;for /f %%i in (&#39;gmt grdinfo world6m.grd -T1000&#39;) do set T1=%%i
+gmt makecpt -Crainbow %T1% &amp;gt; 1.cpt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;再比如 bash 下可以非常方便的进行多段文本的输入&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 被 EOF 包起来的几行文本将作为 gmt psxy 的输入
+gmt psxy -R -J -Sc0.5c -Gred -W0.5p,black -K -O &amp;lt;&amp;lt; EOF &amp;gt;&amp;gt; $PS
+112.35 36.56
+113.78 42.15
+114.50 37.60
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在 bat 下则只能将两行文本先写入到文本中，再将文本作为命令的输入&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bat&#34;&gt;echo 112.35 36.56 &amp;gt; tmp
+echo 113.78 42.15 &amp;gt;&amp;gt; tmp
+echo 114.50 37.60 &amp;gt;&amp;gt; tmp
+gmt psxy tmp -R -J -Sc0.5c -Gred -W0.5p,black -O -K &amp;gt;&amp;gt; %PS%
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最后，如果脚本中出现了 grep、cut、wc、cat 等命令，可以下载社区提供的 UnixTools
+工具包并解压缩到 GMT 安装路径的 bin 目录下，需要注意的是 bash 脚本中的 awk
+需要更改为 gawk，同时单引号需要改为双引号。&lt;/p&gt;
+&lt;p&gt;下面给出一个简单的 bash 脚本：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;#!bin/bash
+PS=example.ps
+# 设置经纬度范围
+R=-R108/125/33/43
+# 设置投影方式
+J=-JM6i
+# 绘制底图
+gmt psbasemap $R $J -B3 -K &amp;gt; $PS
+T1=$(gmt grdinfo huabei.grd -T100)
+gmt makecpt -Ctopo $T1 &amp;gt; huabei.cpt
+# 绘制华北地形
+gmt grdimage -R -J huabei.grd -Chuabei.cpt -K -O &amp;gt;&amp;gt; $PS
+# 绘制台站分布
+gmt psxy -R -J -St0.5c -Gblack -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+112 36
+120 40
+115 39
+EOF
+# 绘制 event.dat 中地震，从第二行开始提取第 4 列作为经度，提取第 3 列作为纬度
+awk &#39;{if (NR&amp;gt;1) print $4,$3}&#39; event.dat | gmt psxy -R -J -Sc0.4c -Gblack -O &amp;gt;&amp;gt; $PS
+# 删除临时文件
+rm gmt.* huabei.cpt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;按照上述方法修改成的 bat 脚本如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bat&#34;&gt;set PS=example.ps
+rem 设置经纬度范围
+set R=-R108/125/33/43
+rem 设置投影方式
+set J=-JM6i
+rem 绘制底图
+gmt psbasemap %R% %J% -B3 -K &amp;gt; %PS%
+for /f %%i in (&#39;gmt grdinfo huabei.grd -T100&#39;) do set T1=%%i
+gmt makecpt -Ctopo %T1% &amp;gt; huabei.cpt
+rem 绘制华北地形
+gmt grdimage -R -J huabei.grd -Chuabei.cpt -K -O &amp;gt;&amp;gt; %PS%
+rem 绘制台站分布
+echo 112 36 &amp;gt; tmp
+echo 120 40 &amp;gt;&amp;gt; tmp
+echo 115 39 &amp;gt;&amp;gt; tmp
+gmt psxy tmp -R -J -St0.5c -Gblack -K -O &amp;gt;&amp;gt; %PS%
+rem 绘制 event.dat 中地震，从第二行开始提取第 4 列作为经度，提取第 3 列作为纬度
+gawk &amp;quot;{if (NR&amp;gt;1) print $4,$3}&amp;quot; event.dat | gmt psxy -R -J -Sc0.4c -Gblack -O &amp;gt;&amp;gt; %PS%
+rem 删除临时文件
+del gmt.* huabei.cpt tmp
+&lt;/code&gt;&lt;/pre&gt;</description></item><item><title>GMT自带中国国界问题</title><link>https://gmt-china.org/blog/china-border-issues/</link><pubDate>Sat, 17 Mar 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/china-border-issues/</guid><description>
+&lt;p&gt;众所周知，中国与周边国家或地区之间存在领土争议，这是一个很敏感的政治问题。&lt;/p&gt;
+&lt;p&gt;对于地学相关的科研工作者而言，在正式出版的中外期刊上发表带有中国国界的地图时需要
+格外注意。最简单的方法就是只绘制海岸线不绘制国界，以避免任何国界带来的可能争议。&lt;/p&gt;
+&lt;h2 id=&#34;中国地图注意事项&#34;&gt;中国地图注意事项&lt;/h2&gt;
+&lt;p&gt;2017年国家测绘地理信息局发布的《“问题地图”清查工作指南》中列出了绘图中应避免的
+若干错误。下面列出了绘制中国全图时的常见注意事项：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;阿克赛钦地区正确表示&lt;/li&gt;
+&lt;li&gt;藏南地区正确表示&lt;/li&gt;
+&lt;li&gt;钓鱼岛、赤尾屿位置正确&lt;/li&gt;
+&lt;li&gt;南海诸岛各岛点位置正确&lt;/li&gt;
+&lt;li&gt;台湾省底色设置与大陆一致&lt;/li&gt;
+&lt;li&gt;&amp;hellip;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;gmt自带中国国界的问题&#34;&gt;GMT自带中国国界的问题&lt;/h2&gt;
+&lt;p&gt;GMT自带了两套与中国国界相关的数据：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;GSHHG：全球海岸线、国界、部分省/州界数据&lt;/li&gt;
+&lt;li&gt;DCW：全球行政区划数据，包含洲界、国界、省界&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;社区也提供了一套相对准确的国界、省界数据，见 &lt;a href=&#34;https://gmt-china.org/example/ex003&#34;&gt;示例三&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;下面的脚本同时绘制了三套中国国界数据以进行对比。由于GSHHG国界与DCW国界几乎相同，
+所以这里只绘制了DCW和社区提供的国界作为对比。&lt;/p&gt;
+&lt;p&gt;绘图脚本：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+R=70/138/3/54
+J=M105/35/6.5i
+PS=CN-border.ps
+gmt psxy -J$J -R$R -T -K &amp;gt; $PS
+# GSHHG 数据
+#gmt pscoast -J$J -R$R -Df -A10000 -Na/0.5p,gray -W1p,gray -K -O &amp;gt;&amp;gt; $PS
+# DCW 数据
+gmt pscoast -J$J -R$R -Df -ECN,TW&amp;#43;p1p,blue@80 -K -O &amp;gt;&amp;gt; $PS
+# 社区数据
+gmt psxy CN-border-L1.dat -J$J -R$R -W1p,red@80 -K -O &amp;gt;&amp;gt; $PS
+gmt psxy -J$J -R$R -T -O &amp;gt;&amp;gt; $PS
+gmt psconvert -A -P -Tg $PS -Z
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;绘图结果如下，其中蓝色边界来自DCW数据，红色边界来自社区数据。&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/blog/china-border-issues/CN-border.png&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;中国国界对比图&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;从上图中可以看出，阿克赛钦地区、藏南地区边界均存在明显差异，其他地方也存在微小差异。&lt;/p&gt;
+&lt;p&gt;在涉及到这些区域时应格外注意。需要提供的是，社区提供的国界数据并不能保证完全
+正确，若用户也更为权威的国界数据，欢迎共享。&lt;/p&gt;
+&lt;h2 id=&#34;参考&#34;&gt;参考&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.iap.cas.cn/xwzx/tzgg/201709/P020170911372769133133.pdf&#34; target=&#34;_blank&#34;&gt;“问题地图”清查工作指南&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>一些实用的自定义符号</title><link>https://gmt-china.org/blog/gmt-custom-symbols/</link><pubDate>Wed, 03 Jan 2018 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/gmt-custom-symbols/</guid><description>&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;下载地址：&lt;a href=&#34;https://gmt-china.org/blog/gmt-custom-symbols/gmt-custom-symbols.zip&#34;&gt;gmt-custom-symbols.zip&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;虽然 GMT 内置了 40 个不同的自定义符号，但对于广大用户来说还是远远无法满足需求，因此，社区将在这里持续更新一些常用的但还没有被 GMT 官方内置的自定义符号。如果你觉得有其它实用的符号没有被包含进来，请向我们反馈，我们会酌情考虑。&lt;/p&gt;
+&lt;p&gt;目前社区提供的自定义符号包括：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;city&lt;/code&gt;：城市符号&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;compass&lt;/code&gt;：指北针符号&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;直接下载 &lt;a href=&#34;https://gmt-china.org/blog/gmt-custom-symbols/gmt-custom-symbols.zip&#34;&gt;gmt-custom-symbols.zip&lt;/a&gt; 并根据需求将解压得到的 def 文件复制到以下任意路径（按脚本搜索顺序排列）：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;current directory&lt;/code&gt;，即运行脚本所在目录&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;~/.gmt&lt;/code&gt; 目录&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$GMT_SHAREDIR/custom&lt;/code&gt; 目录。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;使用方法如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+ps=plot_custom_symbols.ps
+# 绘制城市符号
+echo 3 5 | gmt psxy -R0/10/0/10 -JM4i -B2 -Skcity/0.2i -W0.6p -K &amp;gt; $ps
+echo 5 5 | gmt psxy -R -J -Skcity/0.3i -Gblue -K -O &amp;gt;&amp;gt; $ps
+echo 7 5 | gmt psxy -R -J -Skcity/0.4i -Gred -W1p -K -O &amp;gt;&amp;gt; $ps
+# 绘制指北针符号
+echo 3 8 | gmt psxy -R -J -Skcompass/0.4i -W0.6p -K -O &amp;gt;&amp;gt; $ps
+echo 5 8 | gmt psxy -R -J -Skcompass/0.5i -Gblue -K -O &amp;gt;&amp;gt; $ps
+echo 7 8 | gmt psxy -R -J -Skcompass/0.6i -Gred -W1p -K -O &amp;gt;&amp;gt; $ps
+# 绘制三角形和五角星符号
+echo 2 2 | gmt psxy -R -J -Sa0.5i -Wblack -Gred -K -O &amp;gt;&amp;gt; $ps
+echo 4 2 | gmt psxy -R -J -St0.5i -Wblack -Ggreen -K -O &amp;gt;&amp;gt; $ps
+# 绘制图例
+gmt pslegend -R -J -F&amp;#43;p1p -DjBR&amp;#43;w1i&amp;#43;o0.2c/0.2c -O &amp;gt;&amp;gt; $ps &amp;lt;&amp;lt; EOF
+S 0.2c kcity 0.15i white 0.5p 1c city
+S 0.2c a 0.15i red 0.5p 1c capital
+S 0.2c t 0.15i green 0.5p 1c station
+EOF
+gmt psconvert -Tg -A -P $ps -Z
+rm -rf gmt.*
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;绘图效果如下：&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/blog/gmt-custom-symbols/plot_custom_symbols.png&#34; width=&#34;450px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;绘制自定义符号&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;</description></item><item><title>GMT 5 在 Windows 下提示无法创建用户目录的解决办法</title><link>https://gmt-china.org/blog/user-directory-warning/</link><pubDate>Fri, 27 Oct 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/user-directory-warning/</guid><description>&lt;p&gt;某些情况下，在 Windows 下运行 GMT 5 时总是出现警告信息：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;gmt: Unable to create GMT User directory : /Users/用户名/.gmt
+gmt: Auto-downloading of earth_relief_##m|s.grd files has been disabled.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;经社区维护人员讨论，确定这是一个 Windows 特有，但又不是所有人都会遇到的一个问题。&lt;/p&gt;
+&lt;p&gt;虽然大部分情况下并不影响程序的正常运行，但总是出现这些警告信息真的有点难受。在官网提交 &lt;a href=&#34;https://gmt.soest.hawaii.edu/issues/1163&#34; target=&#34;_blank&#34;&gt;issue&lt;/a&gt; 后得到一种解决办法：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1、打开 “我的电脑”-&amp;gt;“属性”-&amp;gt;“高级系统设置”-&amp;gt;“环境变量”
+2、新建 “系统变量”
+变量名： HOME
+变量值： C:\Users\用户名
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;重新运行脚本检查问题是否得到解决。&lt;/p&gt;
+&lt;p&gt;经过测试， &lt;code&gt;HOME&lt;/code&gt; 变量的值可以取任意盘符中任何已存在的文件夹，正常情况下，执行脚本后会生成 &lt;code&gt;%HOME%/.gmt/cache&lt;/code&gt; 空文件夹。&lt;/p&gt;</description></item><item><title>GMT 中文社区第三次线下聚餐</title><link>https://gmt-china.org/blog/GUD-20171017/</link><pubDate>Tue, 17 Oct 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/GUD-20171017/</guid><description>&lt;p&gt;金秋十月，秋高气爽，雁过留声。GMT 中文社区在北京成功举办了第三次线下聚餐活动。&lt;/p&gt;
+&lt;p&gt;2017 年 CGU 年会届时举行，全国同行汇集首都北京国际会议中心，我们借此机会齐聚一堂。个别同学本来表示由于时间原因或距离问题无法参会，最终还是觉得机会难得克服各种困难先后赶到。最终，13 位 GMTers 进行了一次成功的“网友见面会”。&lt;/p&gt;
+&lt;p&gt;在聚会上，本来活跃在 QQ 群里的大家面对面相互认识和了解了彼此的学习经历和科研方向，除了探讨了 GMT 学习、社区发展，还聊到了地震预报预警、防震减灾和地震学家如何对公众进行地震科普等问题。不仅如此，本次聚会大家还进行了一些简单的跨学科交流，桌上言谈之间对于自然科学研究及探索的热情和勇气溢于言表。&lt;/p&gt;
+&lt;p&gt;希望通过本次聚会我们能更加熟悉和了解该领域各个研究方向的同学，彼此保持更密切的联络，在科研道路上相互交流、积极互助。&lt;/p&gt;
+&lt;p&gt;科研道路上，知己天涯若比邻，期待下次再聚~&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;GUD-20171017-1.jpg&#34; /&gt;
+&lt;/figure&gt;
+&lt;figure&gt;
+&lt;img src=&#34;GUD-20171017-2.jpg&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;从左至右依次为：章浩东（中科院地质与地球物理所）、王志伟（地震局地质研究所）、王少卿（地震局地球物理所）、 张琰（地震局地球物理所）、张周（广州地化所）、徐荟（地震局地球物理所）、王亮（成都理工）、杨晓瑜（地震局地球物理所）、李佳威（地震局地球物理所&amp;#43;北大）、神秘人、田冬冬（中科大）、任昱（南海所）、方洪健（中科大）、胡少乾（中科大）&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;</description></item><item><title>矢量及应力应变张量绘制</title><link>https://gmt-china.org/example/ex017/</link><pubDate>Fri, 13 Oct 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex017/</guid><description>&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;示例数据:
+&lt;a href=&#34;https://gmt-china.org/example/ex017/velo.gmt&#34;&gt;速度矢量&lt;/a&gt;
+&lt;a href=&#34;https://gmt-china.org/example/ex017/slab.gmt&#34;&gt;板块位置&lt;/a&gt;
+&lt;a href=&#34;https://gmt-china.org/example/ex017/stresstensor.gmt&#34;&gt;应力张量&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;本文绘制了速度矢量和应力应变张量主轴&lt;/p&gt;
+&lt;p&gt;Bash 绘图脚本如下:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/usr/bin/env sh
+ps=subslab.ps
+J=X-4i/-4i
+R=0/400/0/400
+I=10/10
+# 绘制底图
+gmt psbasemap -R$R -J$J -Bxaf&amp;#43;l&amp;#34;X [km]&amp;#34; -Byaf&amp;#43;l&amp;#34;Depth [km]&amp;#34; -K -BEnSw&amp;#43;t&amp;#34;Mantle Velocity&amp;#34; &amp;gt; $ps
+# 将向量在 x, y 方向上的投影转换为网格化文件
+gmt xyz2grd ./velo.gmt -R$R -i0,1,2 -I$I -GU.nc
+gmt xyz2grd ./velo.gmt -R$R -I$I -i0,1,3 -GV.nc
+# 绘制矢量
+# -Q 设置矢量属性
+# -G 设置向量内部颜色填充
+# -W 设置绘制矢量外边画笔的属性
+# -S 设置向量值和图上距离的换算关系 e.g 50i-50个向量单位的距离在图上绘制为1英寸
+gmt grdvector U.nc V.nc -R -I10 -J -O -K -Q0.1i&amp;#43;e&amp;#43;n0.25i&amp;#43;h0.5 -Gblack -W1p -S50i -V &amp;gt;&amp;gt; $ps
+# 绘制图例
+gmt pslegend -R -J -F&amp;#43;gwhite&amp;#43;p0.2p,black -Dx4i/0i&amp;#43;w1.3i/0.6i&amp;#43;jBR&amp;#43;l1.2 -C0.2i/0.1i -B -O -K -V &amp;lt;&amp;lt; EOF &amp;gt;&amp;gt; $ps
+S 0.1i v0.02i&amp;#43;a40&amp;#43;e 0.1i black 0.1p 0.2i 5 cm/year
+S 0.1i - 0.2i - 0.8p,blue,- 0.3i Slab
+EOF
+# 绘制板块下插边界
+gmt psxy ./slab.gmt -B -J -W0.8p,blue,- -R -O -K &amp;gt;&amp;gt; $ps
+echo &amp;#34;(a)&amp;#34; | gmt pstext -B -J -R -F&amp;#43;cTL&amp;#43;f11p,Times-Roman -D-0.56i/1c -K -O -N &amp;gt;&amp;gt; $ps
+gmt psbasemap -R$R -J$J -Bxaf&amp;#43;l&amp;#34;X [km]&amp;#34; -Byaf&amp;#43;l&amp;#34;Depth [km]&amp;#34; -V -K -O -BEnSw&amp;#43;t&amp;#34;Main strain distribution&amp;#34; -X5.6i &amp;gt;&amp;gt; $ps
+gmt psxy ./slab.gmt -B -J -W0.8p,blue,- -R -O -K -V&amp;gt;&amp;gt; $ps
+# 绘制应力张量主应力大小及方向
+# -Sx 表示绘制主应力/应变大小与方向, 后面数值表示1单位待绘制物理量在图上的长度
+# 本例中表示图上 0.01i 长度表示的应力大小为 1 Mpa
+# -A2p&amp;#43;jc 表示矢量属性,设置箭头大小和设置矢量与输入x,y坐标的关系
+# 输入文件格式:
+# 横坐标, 竖坐标, 应力张量扩张特征值[扩张为正], 压缩特征值, 压缩特征值对应矢量与正北方向夹角
+gmt psvelo ./psveloStress.gmt -J -R -Sx0.01i -B -W0.1p,red -A2p&amp;#43;jc -K -O -V &amp;gt;&amp;gt; $ps
+gmt pslegend -R -J -F&amp;#43;gwhite&amp;#43;p0.2p,black -Dx4i/0i&amp;#43;w1i/0.6i&amp;#43;jBR&amp;#43;l1.2 -C0.2i/0.1i -B -O -K -V &amp;lt;&amp;lt; EOF &amp;gt;&amp;gt; $ps
+S 0.1i v2p&amp;#43;e&amp;#43;p0.1p,red 0.1i red 0.1p 0.2i 10 Mpa
+S 0.1i - 0.2i - 0.8p,blue,- 0.3i Slab
+EOF
+echo &amp;#34;(b)&amp;#34; | gmt pstext -B -J -R -F&amp;#43;cTL&amp;#43;f11p,Times-Roman -D-0.56i/1c -O -N &amp;gt;&amp;gt; $ps
+rm gmt.conf gmt.history *.nc
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;绘图效果如下:&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/example/ex017/subslab.png&#34; width=&#34;800px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;矢量绘制示例&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;</description></item><item><title>绘制自定义符号</title><link>https://gmt-china.org/example/ex018/</link><pubDate>Fri, 13 Oct 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex018/</guid><description>&lt;p&gt;本文展示了 GMT 内置的 40 个自定义符号以及如何绘制这些符号。&lt;/p&gt;
+&lt;p&gt;GMT 内置自定义符号如下所示：&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/example/ex018/def.png&#34; width=&#34;750px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;GMT 内置自定义符号&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;绘制自定义符号脚本如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+ps=plot_def.ps
+# 绘制底图
+gmt pscoast -Rg -JR9i -Bx60 -By30 -Gdarkgreen -Slightblue \
+-Dc -A5000 -K &amp;gt; $ps
+# --- 使用 psxy -Sk&amp;lt;name&amp;gt;/&amp;lt;size&amp;gt; 绘制自定义符号 -------
+# 绘制火山符号
+echo 60 10 | gmt psxy -R -J -Skvolcano/1c -Wthinnest -Gred -K -O &amp;gt;&amp;gt; $ps
+# 绘制闪电符号
+echo 114 37 | gmt psxy -R -J -Skflash/1c -Wthinnest -Gyellow -K -O &amp;gt;&amp;gt; $ps
+# 绘制飓风符号
+echo 127 20 | gmt psxy -R -J -Skhurricane/1c -Wthinnest -Gblue -K -O &amp;gt;&amp;gt; $ps
+# 绘制太阳符号
+echo 20 10 | gmt psxy -R -J -Sksun/1c -Wthinnest -Gred -O &amp;gt;&amp;gt; $ps
+gmt psconvert -Tg -A -P $ps -Z
+rm -rf gmt.*
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;绘图效果如下：&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/example/ex018/plot_def.png&#34; width=&#34;750px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;绘制自定义符号&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;</description></item><item><title>中国大陆及周边活动地块分布图</title><link>https://gmt-china.org/example/ex016/</link><pubDate>Sun, 17 Sep 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex016/</guid><description>
+&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;数据下载： &lt;a href=&#34;https://gmt-china.org/example/ex016/CN-plate-neighbor.dat&#34;&gt;CN-plate-neighbor.dat&lt;/a&gt;
+&lt;a href=&#34;https://gmt-china.org/datas/CN-block-L1.dat&#34;&gt;CN-block-L1.dat&lt;/a&gt;
+&lt;a href=&#34;https://gmt-china.org/datas/CN-block-L1-deduced.dat&#34;&gt;CN-block-L1-deduced.dat&lt;/a&gt;
+&lt;a href=&#34;https://gmt-china.org/datas/CN-block-L2.dat&#34;&gt;CN-block-L2.dat&lt;/a&gt;
+&lt;a href=&#34;https://gmt-china.org/datas/CN-border-L1.dat&#34;&gt;CN-border-L1.dat&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;本文绘制了中国大陆及周边活动地块分布图。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CN-plate-neighbor.dat&lt;/code&gt; 为中国大陆周边板块边界数据&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CN-block-L1.dat&lt;/code&gt; 为一级地块边界数据&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CN-block-L1-deduced.dat&lt;/code&gt; 为一级地块推断边界数据&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CN-block-L2.dat&lt;/code&gt; 为二级地块边界数据&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CN-border-L1.dat&lt;/code&gt; 为国界线数据&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;数据由网友根据下图矢量化而成，并经本文作者做了一定的格式转换：&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/example/ex016/zhang.jpg&#34; width=&#34;750px&#34; /&gt;
+&lt;/figure&gt;
+&lt;p&gt;绘图效果如下：&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/example/ex016/BLOCK.png&#34; width=&#34;800px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;中国大陆及周边活动地块分布图&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;bash绘图脚本(gmt5.4.2)如下，也提供了等效的 &lt;a href=&#34;https://gmt-china.org/example/ex016/BLOCK.bat&#34;&gt;bat脚本&lt;/a&gt;：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+gmt gmtset MAP_ANNOT_OBLIQUE 6
+gmt gmtset MAP_TICK_LENGTH_PRIMARY 0
+gmt gmtset MAP_FRAME_TYPE plain
+R=78/12/149/53r
+J=B105/10/25/47/15c
+PS=BLOCK.ps
+gmt psxy -R$R -J$J -T -K &amp;gt; $PS
+# ============底图
+gmt psbasemap -R$R -J$J -Bx10 -By5 -BNEWS -K -O &amp;gt;&amp;gt; $PS
+gmt pscoast -R$R -J$J -Ggray95 -S83/216/238 -A5000 -Dh -K -O&amp;gt;&amp;gt; $PS
+gmt psxy CN-border-L1.dat -R$R -J$J -W0.2p -Gwhite -O -K &amp;gt;&amp;gt; $PS
+# ============绘制板块边界
+gmt psxy CN-plate-neighbor.dat -R$R -J$J -W2.0p,2/138/210 -Sf0.5&amp;#43;t&amp;#43;l -G2/138/210 -O -K &amp;gt;&amp;gt; $PS
+# ============绘制推断地块边界
+gmt psxy CN-block-L1-deduced.dat -R$R -J$J -W1.0p,2/138/210,- -O -K &amp;gt;&amp;gt; $PS
+# ============绘制二级地块边界
+gmt psxy CN-block-L2.dat -R$R -J$J -W1.0p,orange -O -K &amp;gt;&amp;gt; $PS
+# ============绘制一级地块边界
+gmt psxy CN-block-L1.dat -R$R -J$J -W1.0p,2/138/210 -O -K &amp;gt;&amp;gt; $PS
+# ============活动地块标注
+gmt pstext -R$R -J$J -F&amp;#43;f10p,37 -O -K &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+90 45 西域活动地块
+122 46 东北亚活动地块
+120 35 华北活动地块
+110 27 华南活动地块
+90 33 青藏活动地块
+97 23 滇缅活动地块
+EOF
+# ============边界图例
+gmt pslegend -R$R -J$J -DjTL&amp;#43;w1.5i&amp;#43;jTL&amp;#43;o0.2c/0.2c -F&amp;#43;gwhite&amp;#43;p0.5p -O -K --FONT_ANNOT_PRIMARY=8p,37 &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+S 0.3i f0.5&amp;#43;t&amp;#43;l 0.4i/0.3c 2/138/210 2.0p,2/138/210 0.7i 板块边界
+S 0.3i - 0.50i 2/138/210 1.0p,2/138/210 0.7i 一级地块边界
+S 0.3i - 0.44i - 1.0p,2/138/210,- 0.7i 推断地块边界
+S 0.3i - 0.50i orange 1.0p,orange 0.7i 二级地块边界
+EOF
+# ============南海诸岛
+gmt psbasemap -R$R -J$J -DjBR&amp;#43;w2c&amp;#43;t -K -O &amp;gt;&amp;gt; $PS
+gmt pscoast -R106/121/3/24 -JM2c -Ggray95 -S83/216/238 -A5000 -Dh -K -O &amp;gt;&amp;gt; $PS
+gmt psxy CN-border-L1.dat -R106/121/3/24 -JM2c -B0 -W0.2p -Gwhite -O -K &amp;gt;&amp;gt; $PS
+gmt psxy -R$R -J$J -T -O &amp;gt;&amp;gt; $PS
+rm gmt.*
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;参考文献&#34;&gt;参考文献&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;张培震,邓起东,张国民,等. 中国大陆的强震活动与活动地块[J]. 中国科学D辑, 2003, 33(z1):12-20.&lt;/li&gt;
+&lt;li&gt;张国民,马宏生,王辉,等. 中国大陆活动地块边界带与强震活动[J]. 地球物理学报,2005,(03):602-610.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;更新历史&#34;&gt;更新历史&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;2017-09-17：初稿；&lt;/li&gt;
+&lt;li&gt;2017-09-28：更新了 &lt;code&gt;CN-block-L1.dat&lt;/code&gt; ， &lt;code&gt;CN-block-L1-deduced.dat&lt;/code&gt; ， &lt;code&gt;CN-block-L2.dat&lt;/code&gt; ，使一、二级地块边界数据不重合；&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>利用 Google Maps 获取超高精度高程数据</title><link>https://gmt-china.org/blog/google-maps-elevation-api/</link><pubDate>Thu, 14 Sep 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/google-maps-elevation-api/</guid><description>
+&lt;p&gt;在绘制超小区域的地形图时，常需要超高精度的高程数据。&lt;/p&gt;
+&lt;p&gt;目前已知的公开高程数据中，ASTER GDEM的精度最高，为1弧秒，即约30米一个数据点。
+研究者可以通过 Google Maps Elevation API 获取米级精度的数据。&lt;/p&gt;
+&lt;h2 id=&#34;数据简介&#34;&gt;数据简介&lt;/h2&gt;
+&lt;p&gt;Google Maps Elevation API 提供地球表面所有位置的海拔高度数据，包括海床上的深度位
+置（此类位置返回负值）。&lt;/p&gt;
+&lt;p&gt;官方文档：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://developers.google.com/maps/documentation/elevation/start?hl=zh-cn&#34; target=&#34;_blank&#34;&gt;入门指南&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developers.google.com/maps/documentation/elevation/intro?hl=zh-cn&#34; target=&#34;_blank&#34;&gt;开发人员指南&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;获取密钥-api-key&#34;&gt;获取密钥 API KEY&lt;/h2&gt;
+&lt;p&gt;想要从Google Maps中获取地形数据，首先需要一个密钥。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;访问 &lt;a href=&#34;https://developers.google.com/maps/documentation/elevation/start?hl=zh-cn&#34; target=&#34;_blank&#34;&gt;入门指南&lt;/a&gt; 页面&lt;/li&gt;
+&lt;li&gt;点击右上角的“获取密钥”按钮（你可能需要翻墙才能获取密钥）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;限额说明：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个用户最多可能只能申请10个免费密钥&lt;/li&gt;
+&lt;li&gt;每个密钥每天2500次免费请求&lt;/li&gt;
+&lt;li&gt;每次请求最多512个位置&lt;/li&gt;
+&lt;li&gt;每秒最多50次请求&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;使用说明&#34;&gt;使用说明&lt;/h2&gt;
+&lt;h3 id=&#34;获取单点高程&#34;&gt;获取单点高程&lt;/h3&gt;
+&lt;p&gt;通过简单的网络请求即可获取单点的高程：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034&amp;amp;key=YOUR_API_KEY
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;其中：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;locations=39.7391536,-104.9847034&lt;/code&gt; 指定了要获取高程的经纬度，纬度和经度之间用逗号分隔；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;key=YOU_API_KEY&lt;/code&gt; 指定了用户密钥，用户需要将自己申请的密钥替换 &lt;code&gt;YOU_API_KEY&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;将上面的链接复制到浏览器中，即可得到返回值为::&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;{
+&amp;quot;results&amp;quot; : [
+{
+&amp;quot;elevation&amp;quot; : 1608.637939453125,
+&amp;quot;location&amp;quot; : {
+&amp;quot;lat&amp;quot; : 39.73915360,
+&amp;quot;lng&amp;quot; : -104.98470340
+},
+&amp;quot;resolution&amp;quot; : 4.771975994110107
+}
+],
+&amp;quot;status&amp;quot; : &amp;quot;OK&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;从中可以看到这一点的海拔高度是 1608.637939453125 米（小数点后几位可能都没有意义）。
+resolution给出了该点高程的分辨率值，即内插海拔高度的数据点之间的最大距离，以米为单位。&lt;/p&gt;
+&lt;h3 id=&#34;获取多点高程&#34;&gt;获取多点高程&lt;/h3&gt;
+&lt;p&gt;也可以在一次网络请求中获取多个点的高程，多个位置之间用 &lt;code&gt;|&lt;/code&gt; 分隔即可。例如：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034|36.455556,-116.866667&amp;amp;key=YOUR_API_KEY
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;但一次请求中的位置不能超过512个。&lt;/p&gt;
+&lt;h3 id=&#34;批量获取高程&#34;&gt;批量获取高程&lt;/h3&gt;
+&lt;p&gt;Google Maps 提供了多种客户端以实现批量获取高程。此处以&lt;a href=&#34;https://github.com/googlemaps/google-maps-services-python/&#34; target=&#34;_blank&#34;&gt;Python客户端&lt;/a&gt; 为例。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;安装 Google Map API 的 Python模块:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ pip install -U googlemaps
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;获取免费密钥&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;参考如下脚本批量获取高程数据&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import googlemaps
+import numpy as np
+def request_elevation(xmin, xmax, xinc, ymin, ymax, yinc, maxnum=512):
+&amp;quot;&amp;quot;&amp;quot;Request elevation and return them with a list
+Parameter
+=========
+xmin : float
+minimum longitude, unit is degree
+xmax : float
+maximum longitude, unit is degree
+xinc : float
+increment of longitude
+ymin : float
+minimum latitude, unit is degree
+ymax : float
+maximum latitude, unit is degree
+yinc : float
+increment of latitude
+maxnum : int
+point number of one request, maximum value is 512
+&amp;quot;&amp;quot;&amp;quot;
+xlist = np.arange(xmin, xmax, xinc)
+ylist = np.arange(ymin, ymax, yinc)
+points = [(y, x) for y in ylist for x in xlist]
+requestnum = int(np.floor(len(points) / maxnum) + 1)
+npoints = np.array_split(points, requestnum)
+if requestnum &amp;gt; 2500:
+print(&amp;quot;Error: Request number exceed! Change grid or region.&amp;quot;)
+return [gmaps.elevation(locations=loc.tolist()) for loc in npoints]
+# 设置要下载高程数据的经度范围、纬度范围以及网格间隔
+xmin, xmax, xinc = 120.000, 129.005, 0.00005
+ymin, ymax, yinc = 30.000, 30.005, 0.00005
+gmaps = googlemaps.Client(key=&#39;YOU_API_KEY&#39;)
+# Obtain all elevations
+# 请设置 maxnum 确保每一次请求的数据点数不超过 512 个以控制请求字符串长度
+elevations = request_elevation(xmin, xmax, xinc, ymin, ymax, yinc, maxnum=512)
+# output data with format `longitude latitude elevation resolution`
+with open(&amp;quot;Elevations.dat&amp;quot;, &amp;quot;w&amp;quot;) as f:
+for loclist in elevations:
+for subloc in loclist:
+outputstr = &amp;quot;{:.5f} {:.5f} {:.5f} {:.5f}\n&amp;quot;.format(
+subloc[&#39;location&#39;][&#39;lng&#39;],
+subloc[&#39;location&#39;][&#39;lat&#39;],
+subloc[&#39;elevation&#39;],
+subloc[&#39;resolution&#39;])
+f.writelines(outputstr)
+&lt;/code&gt;&lt;/pre&gt;</description></item><item><title>绘制GPS速度场</title><link>https://gmt-china.org/example/ex015/</link><pubDate>Thu, 07 Sep 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex015/</guid><description>&lt;p&gt;本示例展示了如何利用psvelo模块绘制GPS速度场。&lt;/p&gt;
+&lt;p&gt;示例中所使用的GPS数据来自于 &lt;a href=&#34;https://doi.org/10.1016/j.geog.2014.12.006&#34; target=&#34;_blank&#34;&gt;Zhao et al., Geod. Geodyn., 2015&lt;/a&gt; 的补充材料。&lt;/p&gt;
+&lt;p&gt;本示例仅用于演示，不保证数据的完整性与可靠性。需要使用相关数据的用户请自行到文章主页下载相关数据。&lt;/p&gt;
+&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;数据下载：
+&lt;a href=&#34;https://gmt-china.org/example/ex015/gps_campagin.txt&#34;&gt;gps_campagin.txt&lt;/a&gt;: Velocities of campagin stations with respective to EURASIA plate from 1999-2014
+&lt;a href=&#34;https://gmt-china.org/example/ex015/gps_continuous.txt&#34;&gt;gps_continuous.txt&lt;/a&gt;: Velocities of continuous stations with respective to EURASIA plate from 1999-2014&lt;/p&gt;
+&lt;/div&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+PS=gps.ps
+R=70/135/15/55
+J=M18c
+# 准备底图所需的地形数据
+gmt grdcut earth_relief_06m.grd -R$R -GcutTopo.grd
+gmt grdgradient cutTopo.grd -Ne0.7 -A50 -GcutTopo_i.grd
+gmt grd2cpt cutTopo.grd -Cglobe -S-10000/10000/200 -Z -D &amp;gt; colorTopo.cpt
+# 绘制底图
+gmt set FORMAT_GEO_MAP=ddd:mm:ssF
+gmt psbasemap -R$R -J$J -Bf5a10 -BWesN -Xc -Yc -K &amp;gt; $PS
+gmt grdimage cutTopo.grd -IcutTopo_i.grd -R -J -CcolorTopo.cpt -Q -O -K &amp;gt;&amp;gt; $PS
+# 注：此处使用的中国国界有误，不可用于发表
+gmt pscoast -R -J -ECN&amp;#43;p1p,black,- -W1/0.2p -I1/0.25p -O -K &amp;gt;&amp;gt; $PS
+# 绘制colorbar
+gmt psscale -DjCB&amp;#43;w18c/0.3c&amp;#43;o0/-2.5c&amp;#43;h -R -J -CcolorTopo.cpt -BWSEN -Bxa2000f400&amp;#43;l&amp;#34;Elevation/m&amp;#34; -G-8000/8000 -O -K &amp;gt;&amp;gt; $PS
+# 绘制GPS速度场
+# -Se后面三参数表示：速度值为1的矢量的长度/置信度0.95/文本的大小
+# -W控制矢量以及误差椭圆的轮廓的宽度，颜色，线型
+# -G矢量填充色
+# -A控制矢量的属性，0.15c是矢量头的大小，&amp;#43;e表示在矢量尾端绘制箭头，&amp;#43;p0.75p矢量线段部分的宽度
+gawk &amp;#39;{print $1,$2,$3,$4,$5,$6,0}&amp;#39; gps_campagin.txt | gmt psvelo -J -R -Se0.05c/0.95/0 -A0.15c&amp;#43;e&amp;#43;p0.75p -Gblue -W0.2p,blue -K -O &amp;gt;&amp;gt; $PS
+gawk &amp;#39;{print $1,$2,$3,$4,$5,$6,0}&amp;#39; gps_continuous.txt | gmt psvelo -J -R -Se0.05c/0.95/0 -A0.15c&amp;#43;e&amp;#43;p0.75p -Gred -W0.2p,red -K -O &amp;gt;&amp;gt; $PS
+# psvelo很难画图例，以下代码展示了如何绘制图例，但需要进行大量微调
+gmt psxy -J -R -Gwhite -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+122 14
+135 14
+135 21
+122 21
+EOF
+gmt pstext -J -R -F&amp;#43;f7p&amp;#43;jML -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+123 20 20\2611 mm/yr
+EOF
+gmt psvelo -J -R -Se0.05c/0.95/0 -A0.15c&amp;#43;e&amp;#43;p0.75p -Gred -W0.2p,blue -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+123 18 20 0 1 1 0
+EOF
+gmt pstext -J -R -F&amp;#43;f6p&amp;#43;jML -M -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+&amp;gt; 127.5 18 0.25 2c c
+Continuous Station
+1998-2014
+EOF
+gmt psvelo -J -R -Se0.05c/0.95/0 -A0.15c&amp;#43;e&amp;#43;p0.75p -Gred -W0.2p,red -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+123 16 20 0 1 1 0
+EOF
+gmt pstext -J -R -F&amp;#43;f6p&amp;#43;jML -M -K -O &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+&amp;gt; 127.5 16 0.25 2c c
+Campaign Stations
+2009-2014
+EOF
+gmt psxy -R -J -T -O &amp;gt;&amp;gt; $PS
+gmt psconvert -A -P -Tg $PS
+rm gmt.* cutTopo*.grd colorTopo.cpt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/example/ex015/gps.png&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;GPS速度场&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;</description></item><item><title>GMT学习群入群须知</title><link>https://gmt-china.org/blog/community-guide/</link><pubDate>Wed, 23 Aug 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/community-guide/</guid><description>
+&lt;p&gt;欢迎加入“地学GMT学习群”（群号：218905582），GMT学习群是一个相对活跃且学术氛围
+浓厚的群。本文是GMT学习群的入群须知，也是GMT中文社区的提问规范。希望所有群友
+可以阅读并遵守以下规范来营造更好的群环境。&lt;/p&gt;
+&lt;div class=&#34;row&#34;&gt;
+&lt;div class=&#34;col-md-6&#34;&gt;
+&lt;h4&gt;群内可以做的事：&lt;/h4&gt;
+&lt;ol&gt;
+&lt;li&gt;GMT相关问题&lt;/li&gt;
+&lt;li&gt;其他地学软件相关问题&lt;/li&gt;
+&lt;li&gt;地学科研相关问题&lt;/li&gt;
+&lt;li&gt;求助文献&lt;/li&gt;
+&lt;li&gt;发科研相关的培训、会议信息&lt;/li&gt;
+&lt;li&gt;介绍并推广自己的最新研究成果&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class=&#34;col-md-6&#34;&gt;
+&lt;h4&gt;群内禁止做的事：&lt;/h4&gt;
+&lt;ol&gt;
+&lt;li&gt;发广告&lt;/li&gt;
+&lt;li&gt;签到、灌水等无意义行为&lt;/li&gt;
+&lt;li&gt;人身攻击&lt;/li&gt;
+&lt;li&gt;讨论政治问题&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;文献求助&#34;&gt;文献求助&lt;/h2&gt;
+&lt;p&gt;需要他人帮忙下载文献时，请先使用 sci-hub 工具自行尝试下载
+（&lt;a href=&#34;https://gmt-china.org/blog/sci-hub/&#34;&gt;sci-hub教程&lt;/a&gt;）。&lt;/p&gt;
+&lt;p&gt;对于中文文献或sci-hub无法下载的文献，方可在群中寻找帮助。求助文献时，请先明确
+告知“使用sci-hub无法下载该文章”并提供文章的官方链接。若找不到官方链接，则提供
+文章的标题、作者、期刊、年份等信息。&lt;/p&gt;
+&lt;p&gt;求助文献示例如下：&lt;/p&gt;
+&lt;div class=&#34;alert alert-info&#34; role=&#34;alert&#34;&gt;&lt;p&gt;文献求助！我已经尝试用sci-hub下载但依然下载不到。文章链接为: XXXXXXX。谢谢。&lt;/p&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;安装类问题&#34;&gt;安装类问题&lt;/h2&gt;
+&lt;p&gt;如果你在安装GMT的过程中遇到问题，请参照下面的模板提问。&lt;/p&gt;
+&lt;div class=&#34;alert alert-info&#34; role=&#34;alert&#34;&gt;&lt;p&gt;我在安装GMT的时候遇到了问题，请问该如何解决？谢谢。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;操作系统是&lt;/strong&gt;: Windows XP | Windows 7 | Ubuntu | CentOS | macOS &amp;hellip;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;要安装的GMT版本是&lt;/strong&gt;: GMT 4.5.16 | GMT 5.4.2 &amp;hellip;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;安装GMT参考的文档是&lt;/strong&gt;: &lt;em&gt;此处可贴文档的网址&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;安装过程中显示的错误信息为&lt;/strong&gt;: &lt;em&gt;此处可贴图&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;思路类问题&#34;&gt;思路类问题&lt;/h2&gt;
+&lt;p&gt;想要实现某一类图，但不知GMT能否实现或没有实现的思路。&lt;/p&gt;
+&lt;p&gt;如果别人文章中有自己想要实现的效果图就直接贴图，并指出自己在实现图中哪一部分
+时没有思路。如果找不到已有的效果图，可以考虑手绘示意图，或精准描述自己想要的
+效果，以免引起误会，造成不必要的时间浪费。&lt;/p&gt;
+&lt;div class=&#34;alert alert-info&#34; role=&#34;alert&#34;&gt;&lt;p&gt;&lt;em&gt;此处先贴一张图&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;请问图中的XXXXX能否用GMT实现？该如何实现？谢谢。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&#34;alert alert-info&#34; role=&#34;alert&#34;&gt;&lt;p&gt;请问我想用GMT实现XXX效果。*此处详细介绍自己想要的效果*。不知GMT中该如何实现？
+谢谢。&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;如果遇到自己画出来的图与自己预期的图不一致，请参考如下模板。
+&lt;div class=&#34;alert alert-info&#34; role=&#34;alert&#34;&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;当前效果&lt;/strong&gt;：截图&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;预期效果&lt;/strong&gt;：预期效果截图，或对预期效果的精确描述&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;我的代码是&lt;/strong&gt;：给出自己使用的代码，可以截图可以贴代码。最好是给出最小示例而不是一堆代码。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;GMT版本是&lt;/strong&gt;: GMT 5.4.2&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/p&gt;
+&lt;h2 id=&#34;脚本报错类&#34;&gt;脚本报错类&lt;/h2&gt;
+&lt;p&gt;遇到绘图脚本或数据处理脚本出错时，请参考如下模板。&lt;/p&gt;
+&lt;div class=&#34;alert alert-info&#34; role=&#34;alert&#34;&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;我想要实现的是&lt;/strong&gt; ：&amp;hellip;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;我的命令/脚本是&lt;/strong&gt;: 可截图或贴脚本&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;终端报错是&lt;/strong&gt;: 终端报错截图&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;提问的智慧&#34;&gt;提问的智慧&lt;/h2&gt;
+&lt;p&gt;时间对任何人都是一笔宝贵的财富。没有人有义务回答你的问题。在期望别人回答你的问题
+之前先要问一问自己针对这个问题做了哪些努力。&lt;/p&gt;
+&lt;h3 id=&#34;提问前需要做的事情&#34;&gt;提问前需要做的事情&lt;/h3&gt;
+&lt;p&gt;大多数的问题，文档都可以为你提供标准的解答。因此在你提问之前，你最好先去阅读一下
+相关的文档，至少确保你阅读过一份完整的入门文档。如果你能够在你提问的同时表明
+自己已经阅读过文档，但是依旧留有困惑，潜在的回答者会更加愿意为你解答。&lt;/p&gt;
+&lt;p&gt;推荐的一些文档：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://gmt-china.org/gallery/&#34;&gt;GMT中文社区图库&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://gmt-china.org/blog/&#34;&gt;GMT中文社区博客&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.gmt-china.org/&#34; target=&#34;_blank&#34;&gt;GMT参考手册&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://modules.gmt-china.org/&#34; target=&#34;_blank&#34;&gt;GMT模块手册&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://gmt.soest.hawaii.edu/projects/gmt/wiki/Documentation&#34; target=&#34;_blank&#34;&gt;GMT官方文档&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;提问技巧&#34;&gt;提问技巧&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;精确描述自己做了什么，遇到了什么问题，要提供足够的信息给潜在的回答者，尽量避免
+回答者多次要求提问者补充额外的信息的情况。&lt;/li&gt;
+&lt;li&gt;提供当前所使用的代码。贴完图之后如果自行修正了代码中的某些错误，一定要更新图。&lt;/li&gt;
+&lt;li&gt;提供截图以及文本。有些时候需要准确看到代码的样子，此时截图更合适；有些时候需要
+复制代码在自己电脑上跑一遍，此时提供文本更合适。&lt;/li&gt;
+&lt;li&gt;提问时说一说自己为了解决这个问题做了哪些事情，没人喜欢“伸手党”。&lt;/li&gt;
+&lt;li&gt;时间对任何人都是一笔宝贵的财富，请心怀感恩之心。&lt;/li&gt;
+&lt;li&gt;当你解决了某个问题（不管是别人帮助还是自己茅塞顿开），请不要吝啬告诉大家你的解决方案&lt;/li&gt;
+&lt;li&gt;当别人正在讨论某个问题时，请不要中间插入自己的问题，待别人的问题告一段落之后再提问。&lt;/li&gt;
+&lt;li&gt;除非必要，不要在首次发问的时候@某个人，这样给所有人的感觉是你在向这个人提问，
+从而失去了更多的潜在回答者。&lt;/li&gt;
+&lt;li&gt;有问题就直接问，不必管有没有人用过。很多时候，你在A软件中遇到的问题可能跟A软件完全没有关系，完全没接触过A软件的人可能也可以帮你解决该问题。&lt;/li&gt;
+&lt;/ol&gt;</description></item><item><title>投稿须知</title><link>https://gmt-china.org/blog/instructions-for-authors/</link><pubDate>Thu, 17 Aug 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/blog/instructions-for-authors/</guid><description>
+&lt;p&gt;GMT 中文社区欢迎读者投稿，投稿者请将稿件发送至 &lt;a href=&#34;mailto:admin@gmt-china.org&#34; target=&#34;_blank&#34;&gt;admin@gmt-china.org&lt;/a&gt; 。&lt;/p&gt;
+&lt;p&gt;投稿分为两类：博客和示例。&lt;/p&gt;
+&lt;h2 id=&#34;博客的要求&#34;&gt;博客的要求&lt;/h2&gt;
+&lt;p&gt;博客是与 GMT、科学研究和社区活动等有关的简短文章，包括但不限于：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;GMT 官方新闻（比如新版本发布）&lt;/li&gt;
+&lt;li&gt;GMT 社区新闻（比如聚餐与培训）&lt;/li&gt;
+&lt;li&gt;GMT 使用技巧&lt;/li&gt;
+&lt;li&gt;GMT 相关的工具&lt;/li&gt;
+&lt;li&gt;GMT 中可以用到的地学数据&lt;/li&gt;
+&lt;li&gt;其他&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;示例的要求&#34;&gt;示例的要求&lt;/h2&gt;
+&lt;p&gt;示例是讲授用 GMT 绘制一个具有典型性的绘图作品的简短文章。&lt;/p&gt;
+&lt;p&gt;投稿的示例，应包含如下内容：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;绘图脚本（请包含必要的注释信息）&lt;/li&gt;
+&lt;li&gt;绘图所需的必要数据（请避免使用太大的数据）&lt;/li&gt;
+&lt;li&gt;最终生成的效果图（PDF、PNG 或 JPG 格式）&lt;/li&gt;
+&lt;li&gt;示例说明文档（请说明绘图的含义以及核心模块的核心选项的简单描述）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;注意事项：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;本社区的脚本是用 bash 写的 GMT5 脚本，不满足此条件也可投稿，社区维护者会酌情处理；&lt;/li&gt;
+&lt;li&gt;绘图中所使用的数据若有来源，请标注出来；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;权益&#34;&gt;权益&lt;/h2&gt;
+&lt;p&gt;请确保你对稿件有在社区投稿的权利，特别在作品修改自他人的情况下。你所拥有的权益是稿件公开后，你有署名权（如果维护者对你的稿件有大改，则维护者可能会在你的名字后面署名）。接受的稿件在公开后，任何人对你的稿件都可以以任何媒介以任何形式进行复制、发行、修改、转换或以其为基础进行再创作用于任何可能的用途，包括商业目的。别人在使用你的作品之后，应当提及你和 GMT 社区，但社区无法保证第三方会尊重你的权益。&lt;/p&gt;</description></item><item><title>绘制指定测线的地震剖面图</title><link>https://gmt-china.org/example/ex014/</link><pubDate>Tue, 15 Aug 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex014/</guid><description>&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;数据下载： &lt;a href=&#34;https://gmt-china.org/example/ex014/earthquakes.dat&#34;&gt;earthquakes.dat&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;本文展示了如何绘制选定测线的地震剖面图。 &lt;code&gt;earthquakes.dat&lt;/code&gt; 为地震数据文件，包含三列数据，分别是经度、纬度、深度。&lt;/p&gt;
+&lt;p&gt;图（a）绘制了区域范围内的地震震中分布图，蓝色的线表示选定的测线；图（b）绘制了选定测线两侧0.2°范围内地震的震中分布图；图（c）绘制了选定地震的经度/深度剖面图；图（d）绘制了选定地震的纬度/深度剖面图。&lt;/p&gt;
+&lt;p&gt;本文主要使用了 &lt;code&gt;project&lt;/code&gt; 模块：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-C100/22&lt;/code&gt; ：指定测线起点为（100°, 22°）；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-E106/30&lt;/code&gt; ：指定测线终点为（106°, 30°）；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-G0.1&lt;/code&gt; ：指定了测线上测点的间隔；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-W-0.2/0.2&lt;/code&gt; ：指定测线两侧各0.2°范围内的地震；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-F&lt;/code&gt; ：该选项指定期望输出的数据列
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-Fxy&lt;/code&gt; 表示输出数据的前两列，即经度和纬度；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-Fxz&lt;/code&gt; 表示输出数据的第一、三列，即经度和深度；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;-Fyz&lt;/code&gt; 表示输出数据的后两列，即纬度和深度。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;示例中 &lt;code&gt;–W&lt;/code&gt; 和 &lt;code&gt;-G&lt;/code&gt; 选项使用的是和输入文件相同的单位（即度），如果使用不同单位（比如km），则需要添加-Q选项。&lt;/p&gt;
+&lt;p&gt;绘图效果如下：&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/example/ex014/seismic-profile.png&#34; width=&#34;500px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;地震剖面图&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;bash绘图脚本如下，也提供了等效的 &lt;a href=&#34;https://gmt-china.org/example/ex014/profile.bat&#34;&gt;bat脚本&lt;/a&gt;：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+PS=seismic-profile.ps
+gmt set MAP_FRAME_TYPE=plain
+# === (a) 绘制区域震中分布图和选定的测线 ===
+gmt psbasemap -R100/110/20/30 -JM3i -Ba5f2.5 -BWeSn -P -Y7i -K &amp;gt; $PS
+# 绘制所有地震位置
+gmt psxy earthquakes.dat -R -J -Sc0.1i -Gred -W0.25p -O -K &amp;gt;&amp;gt; $PS
+# 沿着测线每隔0.1度生成一个测点并绘制测线
+gmt project -C100/22 -E106/30 -G0.1 | gmt psxy -R -J -W2p,blue -O -K &amp;gt;&amp;gt; $PS
+echo &amp;#39;(a)&amp;#39; | gmt pstext -R -J -F&amp;#43;cBR&amp;#43;f12p,1 -Dj0.2c/0.2c -O -K &amp;gt;&amp;gt; $PS
+# === (b) 绘制选定测线0.2度范围内地震的震中分布图 ===
+gmt psbasemap -R100/110/20/30 -JM3i -Ba5f2.5 -BWeSn -X4i -O -K &amp;gt;&amp;gt; $PS
+# 筛选出测线周围0.2度范围内的地震并绘制
+gmt project earthquakes.dat -C100/22 -E106/30 -Fxy -W-0.2/0.2 | gmt psxy -R -J -Sc0.1i -Gred -W0.25p -O -K &amp;gt;&amp;gt; $PS
+# 沿着测线每隔0.1度生成一个测点并绘制测线
+gmt project -C100/22 -E106/30 -G0.1 | gmt psxy -R -J -W2p,blue -O -K &amp;gt;&amp;gt; $PS
+echo &amp;#39;(b)&amp;#39; | gmt pstext -R -J -F&amp;#43;cBR&amp;#43;f12p,1 -Dj0.2c/0.2c -O -K &amp;gt;&amp;gt; $PS
+# === (c) 绘制选定测线0.2度范围内地震的经度/深度剖面图 ===
+gmt psbasemap -R100/106/0/70 -JX7i/-1.0i -Bxa1&amp;#43;lLongitude -Bya20f10&amp;#43;l&amp;#34;Depth(km)&amp;#34; -BWeSn --MAP_TICK_LENGTH_PRIMARY=-0.03i -X-4i -Y-2.0i -O -K &amp;gt;&amp;gt; $PS
+# 筛选出测线周围0.2度范围内的地震并输出地震的经度和深度
+gmt project earthquakes.dat -C100/22 -E106/30 -Fxz -W-0.2/0.2 | gmt psxy -R -J -Sc0.1i -Gred -W0.25p -O -K &amp;gt;&amp;gt; $PS
+echo &amp;#39;(c)&amp;#39; | gmt pstext -R -J -F&amp;#43;cBR&amp;#43;f12p,1 -Dj0.2c/0.2c -O -K &amp;gt;&amp;gt; $PS
+# === (d) 绘制选定测线0.2度范围内地震的纬度/深度剖面图 ===
+gmt psbasemap -R22/30/0/70 -JX7i/-1.0i -Bxa1&amp;#43;lLatitude -Bya20f10&amp;#43;l&amp;#34;Depth(km)&amp;#34; -BWeSn --MAP_TICK_LENGTH_PRIMARY=-0.03i -Y-2.0i -O -K &amp;gt;&amp;gt; $PS
+# 筛选出测线周围0.2度范围内的地震并输出地震的纬度和深度
+gmt project earthquakes.dat -C100/22 -E106/30 -Fyz -W-0.2/0.2 | gmt psxy -R -J -Sc0.1i -Gred -W0.25p -O -K &amp;gt;&amp;gt; $PS
+echo &amp;#39;(d)&amp;#39; | gmt pstext -R -J -F&amp;#43;cBR&amp;#43;f12p,1 -Dj0.2c/0.2c -O -K &amp;gt;&amp;gt; $PS
+gmt psxy -R -J -T -O &amp;gt;&amp;gt; $PS
+gmt psconvert $PS -A -P -Tg
+rm gmt.*
+&lt;/code&gt;&lt;/pre&gt;</description></item><item><title>绘制等高线图和剖面图</title><link>https://gmt-china.org/example/ex013/</link><pubDate>Mon, 14 Aug 2017 00:00:00 +0000</pubDate><author>admin@gmt-china.org (GMT 中文社区)</author><guid>https://gmt-china.org/example/ex013/</guid><description>&lt;div class=&#34;notices info&#34; &gt;
+&lt;p&gt;数据下载： &lt;a href=&#34;https://gmt-china.org/example/ex013/maunakea.grd&#34;&gt;maunakea.grd&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;冒纳凯阿火山位于夏威夷群岛，是形成夏威夷岛的五座火山之一，是从结构体底部到顶部的全球最高峰。
+这里，我们尝试为冒纳凯阿火山绘制等高线地图和高程的剖面图。&lt;/p&gt;
+&lt;p&gt;本示例主要使用了如下模块：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;grdcontour&lt;/code&gt; 模块可以根据地形网格文件绘制等高线，并进行标注。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;project&lt;/code&gt; 模块可以根据测线的起点与终点的经纬度坐标和步长，输出测线上采样点的坐标。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;grdtrack&lt;/code&gt; 模块则可以根据上述输出的采样点坐标从地形文件中得到采样点的距离和高程。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;绘图效果如下：&lt;/p&gt;
+&lt;figure&gt;
+&lt;img src=&#34;https://gmt-china.org/example/ex013/maunakea.png&#34; width=&#34;500px&#34; /&gt;
+&lt;figcaption&gt;
+&lt;h4&gt;Mauna Kea Volcano&lt;/h4&gt;
+&lt;/figcaption&gt;
+&lt;/figure&gt;
+&lt;p&gt;绘图脚本如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash line-numbers&#34;&gt;#!/bin/bash
+PS=maunakea.ps
+# ==== 预设参数 ====
+gmt gmtset MAP_FRAME_TYPE=plain \
+FONT_ANNOT_PRIMARY=14p,25,black \
+FONT_LABEL=14p,25,black \
+FONT_TITLE=24p,25,black \
+MAP_GRID_PEN_PRIMARY=thick,black,-- \
+MAP_TICK_PEN_PRIMARY=thick,black \
+MAP_TICK_PEN_SECONDARY=thick,black \
+FORMAT_GEO_MAP=dddmmF
+# ==== 输入文件头 ====
+gmt psxy -R0/1/0/1 -JX1c -T -K -P &amp;gt; $PS
+# ==== 等高线图 ====
+# 主要等高线 500m 间隔(-A)，次要等高线 100m 间隔(-C)，Y 把地图上移 10 厘米，为剖面图预留空间
+gmt grdcontour maunakea.grd -R155:40W/155:16W/19:41N/19:57N -JM15c -Y10c -C100 -Q100 -A500&amp;#43;f8p,25,darkred&amp;#43;o -O -K &amp;gt;&amp;gt; $PS
+# ==== 绘制剖面的测线 ====
+# 给定测线的起点(-C)和终点(-E)的经纬度，以及步长(-G)，project 输出经纬度坐标通过管道传输给 grdtrack
+# grdtrack 从地形文件中取样，把获得的信息输出到 gmt.xy 文件，gmt.xy 文件四列，依次是经度、纬度、距离和高程
+gmt project -C-155.65/19.75 -E-155.28/19.9 -G0.1 -Q | gmt grdtrack -Gmaunakea.grd &amp;gt; gmt.xy
+# psxy 使用 gmt.xy 的前两列画测线
+gmt psxy gmt.xy -R -J -Wthick,darkred -O -K &amp;gt;&amp;gt; $PS
+# 测线的起点和终点标记为 A 和 B
+gmt pstext -R -J -F&amp;#43;j&amp;#43;f14p,25,darkred -O -K &amp;gt;&amp;gt; $PS &amp;lt;&amp;lt; EOF
+-155.65 19.75 LT A
+-155.28 19.9 LT B
+EOF
+gmt psbasemap -R -J -Ba5m -B&amp;#43;t&amp;#34;Mauna Kea Volcano&amp;#34; -O -K &amp;gt;&amp;gt; $PS
+# ==== 剖面图 ====
+# 使用 gmtinfo 从地形文件中获得 -R 的适当范围
+R=$(gmt gmtinfo gmt.xy -i2,3 -I1/100)
+# 使用 -Y 把剖面图下移 9 厘米
+gmt psxy gmt.xy -i2,3 $R -JX15c/6c -Wthick,darkred -Y-9c -O -K &amp;gt;&amp;gt; $PS
+# 先画 NE 两边的外框，再画 WS 两边的外框
+gmt psbasemap -R -J -BNE -Bxa5f1 -Bya1000f500g1000 -O -K &amp;gt;&amp;gt; $PS
+gmt psbasemap -R -J -BWS -Bxa5f1&amp;#43;l&amp;#34;Distance of A-B profile (km)&amp;#34; -Bya1000f500&amp;#43;l&amp;#34;Height (m)&amp;#34; -O -K &amp;gt;&amp;gt; $PS
+gmt psxy -R -J -O -T &amp;gt;&amp;gt; $PS
+gmt psconvert -A -Tg $PS
+rm -rf gmt.*
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;本示例修改自鄭懷傑的&lt;a href=&#34;http://gmt-tutorials.org/contour_and_profile.html&#34; target=&#34;_blank&#34;&gt;等高線地圖及地形剖面指令稿&lt;/a&gt;。&lt;/p&gt;</description></item></channel></rss>

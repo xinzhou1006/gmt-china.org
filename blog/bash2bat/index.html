@@ -1,0 +1,70 @@
+<!doctype html><html lang=zh-cmn-hans><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><meta name=generator content="Hugo 0.48"><meta name=author content="GMT 中文社区"><meta name=description content="面向 GMT 中文用户的小众社区"><title>如何将 bash 脚本改成 bat 脚本 | GMT 中文社区</title><link href=//cdn.bootcss.com/bootswatch/3.3.7/paper/bootstrap.css rel=stylesheet><link href=//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/themes/prism-solarizedlight.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.css rel=stylesheet><link href=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.css rel=stylesheet><link rel=stylesheet href=https://gmt-china.org/css/style.css><link rel=stylesheet href=https://gmt-china.org/css/mobile.css><link rel="shortcut icon" href=https://gmt-china.org/images/favicon.ico type=image/x-icon type=image/png><link rel=icon href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon href=https://gmt-china.org/images/apple-touch-icon.png type=image/png><link rel=apple-touch-icon sizes=57x57 href=https://gmt-china.org/images/apple-touch-icon-57x57.png type=image/png><link rel=apple-touch-icon sizes=72x72 href=https://gmt-china.org/images/apple-touch-icon-72x72.png type=image/png><link rel=apple-touch-icon sizes=76x76 href=https://gmt-china.org/images/apple-touch-icon-76x76.png type=image/png><link rel=apple-touch-icon sizes=114x114 href=https://gmt-china.org/images/apple-touch-icon-114x114.png type=image/png><link rel=apple-touch-icon sizes=120x120 href=https://gmt-china.org/images/apple-touch-icon-120x120.png type=image/png><link rel=apple-touch-icon sizes=144x144 href=https://gmt-china.org/images/apple-touch-icon-144x144.png type=image/png><link rel=apple-touch-icon sizes=152x152 href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon sizes=180x180 href=https://gmt-china.org/images/apple-touch-icon-180x180.png type=image/png><meta name=msapplication-TileImage content=https://gmt-china.org/images/apple-touch-icon-144x144.png><meta name=msapplication-TileColor content=#d83434></head><body><div class=container><header id=header><div class=outer><nav class="navbar navbar-default navbar-fixed-top"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#navbar-collapse-menu aria-expanded=false>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span><span class=icon-bar></span><span class=icon-bar></span></button>
+<a class=navbar-brand href=https://gmt-china.org/><span class=site-title>GMT 中文社区</span></a></div><div class="collapse navbar-collapse" id=navbar-collapse-menu><ul class="nav navbar-nav navbar-right"><li class=nav-item><a href=/>首页</a></li><li class=nav-item><a href=/docs/>文档</a></li><li class=nav-item><a href=/gallery/>图库</a></li><li class=nav-item><a href=/blog/>博客</a></li><li class=nav-item><a href=/example/>示例</a></li><li class=nav-item><a href=/datas/>数据集</a></li><li class=nav-item><a href=/download/>下载</a></li><li class=nav-item><a href=/authors/>贡献者</a></li><li class=nav-item><a href=/about/>关于</a></li><li class=nav-item><a href=/images/qq-group.jpg><i class="fa fa-qq fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=https://github.com/gmt-china><i class="fa fa-github fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=mailto:admin@gmt-china.org><i class="fa fa-envelope fa-lg" aria-hidden=true></i></a></li><li><a href=https://gmt-china.org/index.xml><i class="fa fa-rss-square fa-lg" aria-hidden=true></i></a></li></ul></div></div></nav></div></header><div id=body><div class=outer><section id=main><article><div class=article-inner><header class=article-header><h1 class=article-title itemprop=name><a href=https://gmt-china.org/blog/bash2bat/ class=permalink>如何将 bash 脚本改成 bat 脚本</a></h1><div class=article-meta><div class=article-category><i class="fa fa-sitemap"></i><a class=article-category-link href=https://gmt-china.org/categories/GMT%E6%8A%80%E5%B7%A7/>GMT技巧</a></div><div class=article-category><i class="fa fa-tags"></i><a class=article-category-link href=https://gmt-china.org/tags/bash/>bash</a>
+,
+<a class=article-category-link href=https://gmt-china.org/tags/bat/>bat</a></div><div class=article-category><i class="fa fa-user"></i><a class=article-category-link href=https://gmt-china.org/authors/%E8%B5%B5%E5%BF%97%E8%BF%9C/>赵志远</a></div><time class=article-date datetime="2018-04-01 00:00:00 &#43;0000 UTC" itemprop=datePublished>2018年04月01日</time></div></header><div class=article-body itemprop=articleBody><p>社区提供的 GMT 绘图脚本多是基于 Linux 下的 bash 脚本，有相当一部分用户并不熟悉
+bash，因此有必要介绍如何将 bash 脚本改成 Windows 下可用的 bat 脚本。</p><p>简单来说，将 bash 脚本改成 bat 脚本需要注意以下几点：</p><ol><li>注释符号： <code>#</code> =&gt; <code>rem</code></li><li>设置变量： <code>PS=MAP.PS</code> =&gt; <code>set PS=MAP.PS</code></li><li>引用变量： <code>$PS</code> =&gt; <code>%PS%</code></li><li>删除文件： <code>rm gmt.*</code> =&gt; <code>del gmt.*</code></li></ol><p>使用 Notepad++ 编辑器编辑脚本可以很简单地利用 <code>Ctrl+F</code> 进行搜索替换。
+比如搜索 <code>#</code> 并全部替换为 <code>rem</code> ，搜索 <code>$PS</code> <code>$R</code> <code>$J</code> 分别替换为 <code>%PS%</code> <code>%R%</code> <code>%J%</code> 。</p><p>当然还有一些比较复杂的语句就需要你对 bat 脚本语言比较熟悉。</p><p>比如 bash 下的嵌套命令可以将一条命令的结果作为变量使用：</p><pre><code class=language-bash>T1=$(gmt grdinfo world6m.grd -T1000)
+gmt makecpt -Crainbow $T1 &gt; 1.cpt
+</code></pre><p>而在 bat 下就需要用 for 循环来实现：</p><pre><code class=language-bat>for /f %%i in ('gmt grdinfo world6m.grd -T1000') do set T1=%%i
+gmt makecpt -Crainbow %T1% &gt; 1.cpt
+</code></pre><p>再比如 bash 下可以非常方便的进行多段文本的输入</p><pre><code class=language-bash># 被 EOF 包起来的几行文本将作为 gmt psxy 的输入
+gmt psxy -R -J -Sc0.5c -Gred -W0.5p,black -K -O &lt;&lt; EOF &gt;&gt; $PS
+112.35 36.56
+113.78 42.15
+114.50 37.60
+EOF
+</code></pre><p>在 bat 下则只能将两行文本先写入到文本中，再将文本作为命令的输入</p><pre><code class=language-bat>echo 112.35 36.56 &gt; tmp
+echo 113.78 42.15 &gt;&gt; tmp
+echo 114.50 37.60 &gt;&gt; tmp
+gmt psxy tmp -R -J -Sc0.5c -Gred -W0.5p,black -O -K &gt;&gt; %PS%
+</code></pre><p>最后，如果脚本中出现了 grep、cut、wc、cat 等命令，可以下载社区提供的 UnixTools
+工具包并解压缩到 GMT 安装路径的 bin 目录下，需要注意的是 bash 脚本中的 awk
+需要更改为 gawk，同时单引号需要改为双引号。</p><p>下面给出一个简单的 bash 脚本：</p><pre><code class=language-bash>#!bin/bash
+PS=example.ps
+# 设置经纬度范围
+R=-R108/125/33/43
+# 设置投影方式
+J=-JM6i
+# 绘制底图
+gmt psbasemap $R $J -B3 -K &gt; $PS
+T1=$(gmt grdinfo huabei.grd -T100)
+gmt makecpt -Ctopo $T1 &gt; huabei.cpt
+# 绘制华北地形
+gmt grdimage -R -J huabei.grd -Chuabei.cpt -K -O &gt;&gt; $PS
+# 绘制台站分布
+gmt psxy -R -J -St0.5c -Gblack -K -O &gt;&gt; $PS &lt;&lt; EOF
+112 36
+120 40
+115 39
+EOF
+
+# 绘制 event.dat 中地震，从第二行开始提取第 4 列作为经度，提取第 3 列作为纬度
+awk '{if (NR&gt;1) print $4,$3}' event.dat | gmt psxy -R -J -Sc0.4c -Gblack -O &gt;&gt; $PS
+# 删除临时文件
+rm gmt.* huabei.cpt
+</code></pre><p>按照上述方法修改成的 bat 脚本如下：</p><pre><code class=language-bat>set PS=example.ps
+rem 设置经纬度范围
+set R=-R108/125/33/43
+rem 设置投影方式
+set J=-JM6i
+rem 绘制底图
+gmt psbasemap %R% %J% -B3 -K &gt; %PS%
+for /f %%i in ('gmt grdinfo huabei.grd -T100') do set T1=%%i
+gmt makecpt -Ctopo %T1% &gt; huabei.cpt
+rem 绘制华北地形
+gmt grdimage -R -J huabei.grd -Chuabei.cpt -K -O &gt;&gt; %PS%
+rem 绘制台站分布
+echo 112 36 &gt; tmp
+echo 120 40 &gt;&gt; tmp
+echo 115 39 &gt;&gt; tmp
+gmt psxy tmp -R -J -St0.5c -Gblack -K -O &gt;&gt; %PS%
+
+rem 绘制 event.dat 中地震，从第二行开始提取第 4 列作为经度，提取第 3 列作为纬度
+gawk &quot;{if (NR&gt;1) print $4,$3}&quot; event.dat | gmt psxy -R -J -Sc0.4c -Gblack -O &gt;&gt; %PS%
+rem 删除临时文件
+del gmt.* huabei.cpt tmp
+</code></pre></div><footer class=article-footer><div id=gitalk-container></div><link rel=stylesheet href=https://unpkg.com/gitalk/dist/gitalk.css><script src=https://unpkg.com/gitalk/dist/gitalk.min.js></script><script>var gitalk=new Gitalk({clientID:'33c0af3846f5099c3375',clientSecret:'89c589212198ac2c0967fe40719e404b269fab8a',owner:'gmt-china',repo:'gitalk',admin:['zhaozhiyuan1989','cehui07226','NothingIsBig','seisman','SeisPider','wangliang1989'],body:location.href,});gitalk.render('gitalk-container');</script></footer><nav><ul class=pager><li class=previous><a href=https://gmt-china.org/blog/china-border-issues/><strong class=article-nav-caption>上一篇</strong><div class=article-nav-title>GMT自带中国国界问题</div></a></li><li class=next><a href=https://gmt-china.org/blog/gmt-versions/><strong class=article-nav-caption>下一篇</strong><div class=article-nav-title>GMT6 要来啦 — GMT 各版本间的差异</div></a></li></ul></nav></div></article></section></div></div><footer id=footer class=footer><div class=copyright>&copy; 2016 -
+<span itemprop=copyrightYear>2018</span>
+<span class=with-love><i class="fa fa-heart"></i></span><span class=author itemprop=copyrightHolder>GMT 中文社区</span></div><div class=powered-by>Powered by <a href=https://gohugo.io target=_blank>Hugo</a> &amp; Hosted by <a href=https://github.com/gmt-china/gmt-china.org target=_blank>GitHub</a>.</div></footer><script src=//cdn.bootcss.com/jquery/3.1.1/jquery.min.js></script><script src=//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/prism.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/components/prism-bash.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.js></script><script src=//cdn.bootcss.com/clipboard.js/1.5.12/clipboard.js></script><script src=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.js></script><script src=https://gmt-china.org/js/script.js></script></div></body></html>

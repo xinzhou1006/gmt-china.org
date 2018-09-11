@@ -1,0 +1,51 @@
+<!doctype html><html lang=zh-cmn-hans><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><meta name=generator content="Hugo 0.48"><meta name=author content="GMT 中文社区"><meta name=description content="面向 GMT 中文用户的小众社区"><title>事件相对台站的震中距方位角分布图 | GMT 中文社区</title><link href=//cdn.bootcss.com/bootswatch/3.3.7/paper/bootstrap.css rel=stylesheet><link href=//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/themes/prism-solarizedlight.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.css rel=stylesheet><link href=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.css rel=stylesheet><link rel=stylesheet href=https://gmt-china.org/css/style.css><link rel=stylesheet href=https://gmt-china.org/css/mobile.css><link rel="shortcut icon" href=https://gmt-china.org/images/favicon.ico type=image/x-icon type=image/png><link rel=icon href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon href=https://gmt-china.org/images/apple-touch-icon.png type=image/png><link rel=apple-touch-icon sizes=57x57 href=https://gmt-china.org/images/apple-touch-icon-57x57.png type=image/png><link rel=apple-touch-icon sizes=72x72 href=https://gmt-china.org/images/apple-touch-icon-72x72.png type=image/png><link rel=apple-touch-icon sizes=76x76 href=https://gmt-china.org/images/apple-touch-icon-76x76.png type=image/png><link rel=apple-touch-icon sizes=114x114 href=https://gmt-china.org/images/apple-touch-icon-114x114.png type=image/png><link rel=apple-touch-icon sizes=120x120 href=https://gmt-china.org/images/apple-touch-icon-120x120.png type=image/png><link rel=apple-touch-icon sizes=144x144 href=https://gmt-china.org/images/apple-touch-icon-144x144.png type=image/png><link rel=apple-touch-icon sizes=152x152 href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon sizes=180x180 href=https://gmt-china.org/images/apple-touch-icon-180x180.png type=image/png><meta name=msapplication-TileImage content=https://gmt-china.org/images/apple-touch-icon-144x144.png><meta name=msapplication-TileColor content=#d83434></head><body><div class=container><header id=header><div class=outer><nav class="navbar navbar-default navbar-fixed-top"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#navbar-collapse-menu aria-expanded=false>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span><span class=icon-bar></span><span class=icon-bar></span></button>
+<a class=navbar-brand href=https://gmt-china.org/><span class=site-title>GMT 中文社区</span></a></div><div class="collapse navbar-collapse" id=navbar-collapse-menu><ul class="nav navbar-nav navbar-right"><li class=nav-item><a href=/>首页</a></li><li class=nav-item><a href=/docs/>文档</a></li><li class=nav-item><a href=/gallery/>图库</a></li><li class=nav-item><a href=/blog/>博客</a></li><li class=nav-item><a href=/example/>示例</a></li><li class=nav-item><a href=/datas/>数据集</a></li><li class=nav-item><a href=/download/>下载</a></li><li class=nav-item><a href=/authors/>贡献者</a></li><li class=nav-item><a href=/about/>关于</a></li><li class=nav-item><a href=/images/qq-group.jpg><i class="fa fa-qq fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=https://github.com/gmt-china><i class="fa fa-github fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=mailto:admin@gmt-china.org><i class="fa fa-envelope fa-lg" aria-hidden=true></i></a></li><li><a href=https://gmt-china.org/index.xml><i class="fa fa-rss-square fa-lg" aria-hidden=true></i></a></li></ul></div></div></nav></div></header><div id=body><div class=outer><section id=main><article><div class=article-inner><header class=article-header><h1 class=article-title itemprop=name><a href=https://gmt-china.org/example/ex011/ class=permalink>事件相对台站的震中距方位角分布图</a></h1><div class=article-meta><div class=article-category><i class="fa fa-user"></i><a class=article-category-link href=https://gmt-china.org/authors/lxrat/>lxrat</a></div><time class=article-date datetime="2017-04-11 00:00:00 &#43;0000 UTC" itemprop=datePublished>2017年04月11日</time></div></header><div class=article-body itemprop=articleBody><p>在以台站为核心的研究中（例如接收函数、S波分裂等），经常需要绘制以台站为中心的
+地震分布图，以展示地震相对于台站的距离以及方位角分布。</p><p>下面是绘图所使用的bash脚本：<pre><code class="language-bash line-numbers">#!/bin/bash
+PS=map.ps
+R=g
+# 假定台站位于 105/30 处
+stlo=105
+stla=30
+max_distance=90
+width=10c  # 图片宽度
+# 使用-JE投影，其后面的四个参数分别是:
+#   中心经度/中心纬度/最大震中距/图片宽度
+J=E$stlo/$stla/$max_distance/$width
+
+# 绘制底图
+gmt pscoast -J$J -R$R -A10000 -Ggrey -K &gt; $PS
+
+# 利用 psbasemap 绘制图中的径向线
+gmt set FORMAT_GEO_MAP=&#43;D
+gmt psbasemap -R0/360/0/90 -JPa$width -Bxa60g60 -Bya180 -K -O &gt;&gt; $PS
+
+# 绘制台站位置（红色三角形）
+echo $stlo $stla | gmt psxy -J$J -R$R -St0.15i -Gred -K -O &gt;&gt; $PS
+# 绘制地震震源位置
+gmt psxy -J$J -R$R -Sc0.05i -Gblue -K -O &gt;&gt; $PS &lt;&lt; EOF
+145 30
+160 40
+60 40
+80 -10
+EOF
+
+# 绘制30和60度等震中距线
+echo $stlo $stla 6672 | gmt psxy -J$J -R$R -SE- -K -O -W1p,red &gt;&gt; $PS
+echo $stlo $stla 13344 | gmt psxy -J$J -R$R -SE- -K -O -W1p,red &gt;&gt; $PS
+
+# 在30, 60, 90处添加文字
+# !!! 输入文件的第二列0, -30, -60 需要根据台站的实际纬度进行微调 !!!
+gmt pstext -J$J -R$R -D0c/0.3c -K -O &gt;&gt; $PS &lt;&lt; EOF
+$stlo 0 30\232
+$stlo -30 60\232
+$stlo -60 90\232
+EOF
+
+gmt psxy -J$J -R$R -T -O &gt;&gt; $PS
+gmt psconvert -A -P -Tg $PS
+rm gmt.*
+</code></pre></p><p>绘图效果：<figure><img src=/example/ex011/map.png><figcaption><h4>事件相对台站的震中距方位角分布图</h4></figcaption></figure></p></div><footer class=article-footer><div id=gitalk-container></div><link rel=stylesheet href=https://unpkg.com/gitalk/dist/gitalk.css><script src=https://unpkg.com/gitalk/dist/gitalk.min.js></script><script>var gitalk=new Gitalk({clientID:'33c0af3846f5099c3375',clientSecret:'89c589212198ac2c0967fe40719e404b269fab8a',owner:'gmt-china',repo:'gitalk',admin:['zhaozhiyuan1989','cehui07226','NothingIsBig','seisman','SeisPider','wangliang1989'],body:location.href,});gitalk.render('gitalk-container');</script></footer><nav><ul class=pager><li class=previous><a href=https://gmt-china.org/example/ex010/><strong class=article-nav-caption>上一篇</strong><div class=article-nav-title>含中国大陆地区的地形图</div></a></li><li class=next><a href=https://gmt-china.org/example/ex012/><strong class=article-nav-caption>下一篇</strong><div class=article-nav-title>绘制M-T图</div></a></li></ul></nav></div></article></section></div></div><footer id=footer class=footer><div class=copyright>&copy; 2016 -
+<span itemprop=copyrightYear>2018</span>
+<span class=with-love><i class="fa fa-heart"></i></span><span class=author itemprop=copyrightHolder>GMT 中文社区</span></div><div class=powered-by>Powered by <a href=https://gohugo.io target=_blank>Hugo</a> &amp; Hosted by <a href=https://github.com/gmt-china/gmt-china.org target=_blank>GitHub</a>.</div></footer><script src=//cdn.bootcss.com/jquery/3.1.1/jquery.min.js></script><script src=//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/prism.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/components/prism-bash.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.js></script><script src=//cdn.bootcss.com/clipboard.js/1.5.12/clipboard.js></script><script src=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.js></script><script src=https://gmt-china.org/js/script.js></script></div></body></html>

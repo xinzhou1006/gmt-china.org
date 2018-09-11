@@ -1,0 +1,58 @@
+<!doctype html><html lang=zh-cmn-hans><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><meta name=generator content="Hugo 0.48"><meta name=author content="GMT 中文社区"><meta name=description content="面向 GMT 中文用户的小众社区"><title>矢量及应力应变张量绘制 | GMT 中文社区</title><link href=//cdn.bootcss.com/bootswatch/3.3.7/paper/bootstrap.css rel=stylesheet><link href=//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/themes/prism-solarizedlight.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.css rel=stylesheet><link href=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.css rel=stylesheet><link rel=stylesheet href=https://gmt-china.org/css/style.css><link rel=stylesheet href=https://gmt-china.org/css/mobile.css><link rel="shortcut icon" href=https://gmt-china.org/images/favicon.ico type=image/x-icon type=image/png><link rel=icon href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon href=https://gmt-china.org/images/apple-touch-icon.png type=image/png><link rel=apple-touch-icon sizes=57x57 href=https://gmt-china.org/images/apple-touch-icon-57x57.png type=image/png><link rel=apple-touch-icon sizes=72x72 href=https://gmt-china.org/images/apple-touch-icon-72x72.png type=image/png><link rel=apple-touch-icon sizes=76x76 href=https://gmt-china.org/images/apple-touch-icon-76x76.png type=image/png><link rel=apple-touch-icon sizes=114x114 href=https://gmt-china.org/images/apple-touch-icon-114x114.png type=image/png><link rel=apple-touch-icon sizes=120x120 href=https://gmt-china.org/images/apple-touch-icon-120x120.png type=image/png><link rel=apple-touch-icon sizes=144x144 href=https://gmt-china.org/images/apple-touch-icon-144x144.png type=image/png><link rel=apple-touch-icon sizes=152x152 href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon sizes=180x180 href=https://gmt-china.org/images/apple-touch-icon-180x180.png type=image/png><meta name=msapplication-TileImage content=https://gmt-china.org/images/apple-touch-icon-144x144.png><meta name=msapplication-TileColor content=#d83434></head><body><div class=container><header id=header><div class=outer><nav class="navbar navbar-default navbar-fixed-top"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#navbar-collapse-menu aria-expanded=false>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span><span class=icon-bar></span><span class=icon-bar></span></button>
+<a class=navbar-brand href=https://gmt-china.org/><span class=site-title>GMT 中文社区</span></a></div><div class="collapse navbar-collapse" id=navbar-collapse-menu><ul class="nav navbar-nav navbar-right"><li class=nav-item><a href=/>首页</a></li><li class=nav-item><a href=/docs/>文档</a></li><li class=nav-item><a href=/gallery/>图库</a></li><li class=nav-item><a href=/blog/>博客</a></li><li class=nav-item><a href=/example/>示例</a></li><li class=nav-item><a href=/datas/>数据集</a></li><li class=nav-item><a href=/download/>下载</a></li><li class=nav-item><a href=/authors/>贡献者</a></li><li class=nav-item><a href=/about/>关于</a></li><li class=nav-item><a href=/images/qq-group.jpg><i class="fa fa-qq fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=https://github.com/gmt-china><i class="fa fa-github fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=mailto:admin@gmt-china.org><i class="fa fa-envelope fa-lg" aria-hidden=true></i></a></li><li><a href=https://gmt-china.org/index.xml><i class="fa fa-rss-square fa-lg" aria-hidden=true></i></a></li></ul></div></div></nav></div></header><div id=body><div class=outer><section id=main><article><div class=article-inner><header class=article-header><h1 class=article-title itemprop=name><a href=https://gmt-china.org/example/ex017/ class=permalink>矢量及应力应变张量绘制</a></h1><div class=article-meta><div class=article-category><i class="fa fa-user"></i><a class=article-category-link href=https://gmt-china.org/authors/SeisPider/>SeisPider</a></div><time class=article-date datetime="2017-10-13 00:00:00 &#43;0000 UTC" itemprop=datePublished>2017年10月13日</time></div></header><div class=article-body itemprop=articleBody><div class="notices info"><p>示例数据:
+<a href=/example/ex017/velo.gmt>速度矢量</a>
+<a href=/example/ex017/slab.gmt>板块位置</a>
+<a href=/example/ex017/stresstensor.gmt>应力张量</a></p></div><p>本文绘制了速度矢量和应力应变张量主轴</p><p>Bash 绘图脚本如下:</p><pre><code class="language-bash line-numbers">#!/usr/bin/env sh
+ps=subslab.ps
+J=X-4i/-4i
+R=0/400/0/400
+I=10/10
+
+# 绘制底图
+gmt psbasemap -R$R -J$J -Bxaf&#43;l&#34;X [km]&#34; -Byaf&#43;l&#34;Depth [km]&#34; -K -BEnSw&#43;t&#34;Mantle Velocity&#34; &gt; $ps
+
+# 将向量在 x, y 方向上的投影转换为网格化文件
+gmt xyz2grd   ./velo.gmt -R$R -i0,1,2 -I$I -GU.nc   
+gmt xyz2grd   ./velo.gmt -R$R -I$I -i0,1,3 -GV.nc
+
+# 绘制矢量
+# -Q 设置矢量属性
+# -G 设置向量内部颜色填充
+# -W 设置绘制矢量外边画笔的属性
+# -S 设置向量值和图上距离的换算关系 e.g 50i-50个向量单位的距离在图上绘制为1英寸 
+gmt grdvector U.nc V.nc -R  -I10 -J -O -K -Q0.1i&#43;e&#43;n0.25i&#43;h0.5 -Gblack -W1p -S50i -V &gt;&gt; $ps
+
+# 绘制图例
+gmt pslegend -R -J -F&#43;gwhite&#43;p0.2p,black -Dx4i/0i&#43;w1.3i/0.6i&#43;jBR&#43;l1.2 -C0.2i/0.1i -B -O -K -V &lt;&lt; EOF &gt;&gt; $ps
+S 0.1i v0.02i&#43;a40&#43;e 0.1i black 0.1p 0.2i 5 cm/year
+S 0.1i - 0.2i - 0.8p,blue,- 0.3i Slab
+EOF
+
+# 绘制板块下插边界
+gmt psxy ./slab.gmt -B -J -W0.8p,blue,- -R -O -K &gt;&gt; $ps
+echo &#34;(a)&#34; | gmt pstext -B -J -R -F&#43;cTL&#43;f11p,Times-Roman -D-0.56i/1c -K -O -N &gt;&gt; $ps
+
+gmt psbasemap -R$R -J$J -Bxaf&#43;l&#34;X [km]&#34; -Byaf&#43;l&#34;Depth [km]&#34; -V -K -O -BEnSw&#43;t&#34;Main strain distribution&#34; -X5.6i &gt;&gt; $ps
+gmt psxy ./slab.gmt -B -J -W0.8p,blue,- -R -O -K -V&gt;&gt; $ps
+
+
+# 绘制应力张量主应力大小及方向
+# -Sx 表示绘制主应力/应变大小与方向, 后面数值表示1单位待绘制物理量在图上的长度
+#     本例中表示图上 0.01i 长度表示的应力大小为 1 Mpa
+# -A2p&#43;jc  表示矢量属性,设置箭头大小和设置矢量与输入x,y坐标的关系
+# 输入文件格式:
+#       横坐标, 竖坐标, 应力张量扩张特征值[扩张为正], 压缩特征值, 压缩特征值对应矢量与正北方向夹角 
+gmt psvelo ./psveloStress.gmt -J -R -Sx0.01i -B -W0.1p,red -A2p&#43;jc -K -O -V &gt;&gt; $ps
+gmt pslegend -R -J -F&#43;gwhite&#43;p0.2p,black -Dx4i/0i&#43;w1i/0.6i&#43;jBR&#43;l1.2 -C0.2i/0.1i -B -O -K -V &lt;&lt; EOF &gt;&gt; $ps
+S 0.1i v2p&#43;e&#43;p0.1p,red 0.1i red 0.1p  0.2i 10 Mpa
+S 0.1i - 0.2i - 0.8p,blue,- 0.3i Slab
+EOF
+echo &#34;(b)&#34; | gmt pstext -B -J -R -F&#43;cTL&#43;f11p,Times-Roman -D-0.56i/1c -O -N &gt;&gt; $ps
+
+rm gmt.conf gmt.history *.nc
+
+</code></pre><p>绘图效果如下:</p><figure><img src=/example/ex017/subslab.png width=800px><figcaption><h4>矢量绘制示例</h4></figcaption></figure></div><footer class=article-footer><div id=gitalk-container></div><link rel=stylesheet href=https://unpkg.com/gitalk/dist/gitalk.css><script src=https://unpkg.com/gitalk/dist/gitalk.min.js></script><script>var gitalk=new Gitalk({clientID:'33c0af3846f5099c3375',clientSecret:'89c589212198ac2c0967fe40719e404b269fab8a',owner:'gmt-china',repo:'gitalk',admin:['zhaozhiyuan1989','cehui07226','NothingIsBig','seisman','SeisPider','wangliang1989'],body:location.href,});gitalk.render('gitalk-container');</script></footer><nav><ul class=pager><li class=previous><a href=https://gmt-china.org/example/ex018/><strong class=article-nav-caption>上一篇</strong><div class=article-nav-title>绘制自定义符号</div></a></li><li class=next><a href=https://gmt-china.org/example/ex019/><strong class=article-nav-caption>下一篇</strong><div class=article-nav-title>绘制含地形起伏的地震剖面图</div></a></li></ul></nav></div></article></section></div></div><footer id=footer class=footer><div class=copyright>&copy; 2016 -
+<span itemprop=copyrightYear>2018</span>
+<span class=with-love><i class="fa fa-heart"></i></span><span class=author itemprop=copyrightHolder>GMT 中文社区</span></div><div class=powered-by>Powered by <a href=https://gohugo.io target=_blank>Hugo</a> &amp; Hosted by <a href=https://github.com/gmt-china/gmt-china.org target=_blank>GitHub</a>.</div></footer><script src=//cdn.bootcss.com/jquery/3.1.1/jquery.min.js></script><script src=//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/prism.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/components/prism-bash.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.js></script><script src=//cdn.bootcss.com/clipboard.js/1.5.12/clipboard.js></script><script src=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.js></script><script src=https://gmt-china.org/js/script.js></script></div></body></html>

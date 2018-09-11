@@ -1,0 +1,52 @@
+<!doctype html><html lang=zh-cmn-hans><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><meta name=generator content="Hugo 0.48"><meta name=author content="GMT 中文社区"><meta name=description content="面向 GMT 中文用户的小众社区"><title>绘制等高线图和剖面图 | GMT 中文社区</title><link href=//cdn.bootcss.com/bootswatch/3.3.7/paper/bootstrap.css rel=stylesheet><link href=//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/themes/prism-solarizedlight.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.css rel=stylesheet><link href=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.css rel=stylesheet><link rel=stylesheet href=https://gmt-china.org/css/style.css><link rel=stylesheet href=https://gmt-china.org/css/mobile.css><link rel="shortcut icon" href=https://gmt-china.org/images/favicon.ico type=image/x-icon type=image/png><link rel=icon href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon href=https://gmt-china.org/images/apple-touch-icon.png type=image/png><link rel=apple-touch-icon sizes=57x57 href=https://gmt-china.org/images/apple-touch-icon-57x57.png type=image/png><link rel=apple-touch-icon sizes=72x72 href=https://gmt-china.org/images/apple-touch-icon-72x72.png type=image/png><link rel=apple-touch-icon sizes=76x76 href=https://gmt-china.org/images/apple-touch-icon-76x76.png type=image/png><link rel=apple-touch-icon sizes=114x114 href=https://gmt-china.org/images/apple-touch-icon-114x114.png type=image/png><link rel=apple-touch-icon sizes=120x120 href=https://gmt-china.org/images/apple-touch-icon-120x120.png type=image/png><link rel=apple-touch-icon sizes=144x144 href=https://gmt-china.org/images/apple-touch-icon-144x144.png type=image/png><link rel=apple-touch-icon sizes=152x152 href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon sizes=180x180 href=https://gmt-china.org/images/apple-touch-icon-180x180.png type=image/png><meta name=msapplication-TileImage content=https://gmt-china.org/images/apple-touch-icon-144x144.png><meta name=msapplication-TileColor content=#d83434></head><body><div class=container><header id=header><div class=outer><nav class="navbar navbar-default navbar-fixed-top"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#navbar-collapse-menu aria-expanded=false>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span><span class=icon-bar></span><span class=icon-bar></span></button>
+<a class=navbar-brand href=https://gmt-china.org/><span class=site-title>GMT 中文社区</span></a></div><div class="collapse navbar-collapse" id=navbar-collapse-menu><ul class="nav navbar-nav navbar-right"><li class=nav-item><a href=/>首页</a></li><li class=nav-item><a href=/docs/>文档</a></li><li class=nav-item><a href=/gallery/>图库</a></li><li class=nav-item><a href=/blog/>博客</a></li><li class=nav-item><a href=/example/>示例</a></li><li class=nav-item><a href=/datas/>数据集</a></li><li class=nav-item><a href=/download/>下载</a></li><li class=nav-item><a href=/authors/>贡献者</a></li><li class=nav-item><a href=/about/>关于</a></li><li class=nav-item><a href=/images/qq-group.jpg><i class="fa fa-qq fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=https://github.com/gmt-china><i class="fa fa-github fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=mailto:admin@gmt-china.org><i class="fa fa-envelope fa-lg" aria-hidden=true></i></a></li><li><a href=https://gmt-china.org/index.xml><i class="fa fa-rss-square fa-lg" aria-hidden=true></i></a></li></ul></div></div></nav></div></header><div id=body><div class=outer><section id=main><article><div class=article-inner><header class=article-header><h1 class=article-title itemprop=name><a href=https://gmt-china.org/example/ex013/ class=permalink>绘制等高线图和剖面图</a></h1><div class=article-meta><div class=article-category><i class="fa fa-user"></i><a class=article-category-link href=https://gmt-china.org/authors/%E7%8E%8B%E4%BA%AE/>王亮</a></div><time class=article-date datetime="2017-08-14 00:00:00 &#43;0000 UTC" itemprop=datePublished>2017年08月14日</time></div></header><div class=article-body itemprop=articleBody><div class="notices info"><p>数据下载： <a href=/example/ex013/maunakea.grd>maunakea.grd</a></p></div><p>冒纳凯阿火山位于夏威夷群岛，是形成夏威夷岛的五座火山之一，是从结构体底部到顶部的全球最高峰。
+这里，我们尝试为冒纳凯阿火山绘制等高线地图和高程的剖面图。</p><p>本示例主要使用了如下模块：</p><ul><li><code>grdcontour</code> 模块可以根据地形网格文件绘制等高线，并进行标注。</li><li><code>project</code> 模块可以根据测线的起点与终点的经纬度坐标和步长，输出测线上采样点的坐标。</li><li><code>grdtrack</code> 模块则可以根据上述输出的采样点坐标从地形文件中得到采样点的距离和高程。</li></ul><p>绘图效果如下：</p><figure><img src=/example/ex013/maunakea.png width=500px><figcaption><h4>Mauna Kea Volcano</h4></figcaption></figure><p>绘图脚本如下：</p><pre><code class="language-bash line-numbers">#!/bin/bash
+PS=maunakea.ps
+
+# ==== 预设参数 ====
+gmt gmtset MAP_FRAME_TYPE=plain \
+    FONT_ANNOT_PRIMARY=14p,25,black \
+    FONT_LABEL=14p,25,black \
+    FONT_TITLE=24p,25,black \
+    MAP_GRID_PEN_PRIMARY=thick,black,-- \
+    MAP_TICK_PEN_PRIMARY=thick,black \
+    MAP_TICK_PEN_SECONDARY=thick,black \
+    FORMAT_GEO_MAP=dddmmF
+
+# ==== 输入文件头 ====
+gmt psxy -R0/1/0/1 -JX1c -T -K -P &gt; $PS
+# ==== 等高线图 ====
+# 主要等高线 500m 间隔(-A)，次要等高线 100m 间隔(-C)，Y 把地图上移 10 厘米，为剖面图预留空间
+gmt grdcontour maunakea.grd -R155:40W/155:16W/19:41N/19:57N -JM15c -Y10c -C100 -Q100 -A500&#43;f8p,25,darkred&#43;o -O -K &gt;&gt; $PS
+
+# ==== 绘制剖面的测线 ====
+# 给定测线的起点(-C)和终点(-E)的经纬度，以及步长(-G)，project 输出经纬度坐标通过管道传输给 grdtrack
+# grdtrack 从地形文件中取样，把获得的信息输出到 gmt.xy 文件，gmt.xy 文件四列，依次是经度、纬度、距离和高程
+gmt project -C-155.65/19.75 -E-155.28/19.9 -G0.1 -Q | gmt grdtrack -Gmaunakea.grd &gt; gmt.xy
+# psxy 使用 gmt.xy 的前两列画测线
+gmt psxy gmt.xy -R -J -Wthick,darkred -O -K &gt;&gt; $PS
+# 测线的起点和终点标记为 A 和 B
+gmt pstext -R -J -F&#43;j&#43;f14p,25,darkred -O -K &gt;&gt; $PS &lt;&lt; EOF
+-155.65 19.75 LT A
+-155.28 19.9 LT B
+EOF
+gmt psbasemap -R -J -Ba5m -B&#43;t&#34;Mauna Kea Volcano&#34; -O -K &gt;&gt; $PS
+
+# ==== 剖面图 ====
+# 使用 gmtinfo 从地形文件中获得 -R 的适当范围
+R=$(gmt gmtinfo gmt.xy -i2,3 -I1/100)
+# 使用 -Y 把剖面图下移 9 厘米
+gmt psxy gmt.xy -i2,3 $R -JX15c/6c -Wthick,darkred -Y-9c -O -K &gt;&gt; $PS
+
+# 先画 NE 两边的外框，再画 WS 两边的外框
+gmt psbasemap -R -J -BNE -Bxa5f1 -Bya1000f500g1000 -O -K &gt;&gt; $PS
+gmt psbasemap -R -J -BWS -Bxa5f1&#43;l&#34;Distance of A-B profile (km)&#34; -Bya1000f500&#43;l&#34;Height (m)&#34; -O -K &gt;&gt; $PS
+
+gmt psxy -R -J -O -T &gt;&gt; $PS
+gmt psconvert -A -Tg $PS
+rm -rf gmt.*
+</code></pre><p>本示例修改自鄭懷傑的<a href=http://gmt-tutorials.org/contour_and_profile.html target=_blank>等高線地圖及地形剖面指令稿</a>。</p></div><footer class=article-footer><div id=gitalk-container></div><link rel=stylesheet href=https://unpkg.com/gitalk/dist/gitalk.css><script src=https://unpkg.com/gitalk/dist/gitalk.min.js></script><script>var gitalk=new Gitalk({clientID:'33c0af3846f5099c3375',clientSecret:'89c589212198ac2c0967fe40719e404b269fab8a',owner:'gmt-china',repo:'gitalk',admin:['zhaozhiyuan1989','cehui07226','NothingIsBig','seisman','SeisPider','wangliang1989'],body:location.href,});gitalk.render('gitalk-container');</script></footer><nav><ul class=pager><li class=previous><a href=https://gmt-china.org/example/ex012/><strong class=article-nav-caption>上一篇</strong><div class=article-nav-title>绘制M-T图</div></a></li><li class=next><a href=https://gmt-china.org/example/ex014/><strong class=article-nav-caption>下一篇</strong><div class=article-nav-title>绘制指定测线的地震剖面图</div></a></li></ul></nav></div></article></section></div></div><footer id=footer class=footer><div class=copyright>&copy; 2016 -
+<span itemprop=copyrightYear>2018</span>
+<span class=with-love><i class="fa fa-heart"></i></span><span class=author itemprop=copyrightHolder>GMT 中文社区</span></div><div class=powered-by>Powered by <a href=https://gohugo.io target=_blank>Hugo</a> &amp; Hosted by <a href=https://github.com/gmt-china/gmt-china.org target=_blank>GitHub</a>.</div></footer><script src=//cdn.bootcss.com/jquery/3.1.1/jquery.min.js></script><script src=//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/prism.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/components/prism-bash.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.js></script><script src=//cdn.bootcss.com/clipboard.js/1.5.12/clipboard.js></script><script src=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.js></script><script src=https://gmt-china.org/js/script.js></script></div></body></html>

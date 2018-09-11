@@ -1,0 +1,86 @@
+<!doctype html><html lang=zh-cmn-hans><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><meta name=generator content="Hugo 0.48"><meta name=author content="GMT 中文社区"><meta name=description content="面向 GMT 中文用户的小众社区"><title>利用 Google Maps 获取超高精度高程数据 | GMT 中文社区</title><link href=//cdn.bootcss.com/bootswatch/3.3.7/paper/bootstrap.css rel=stylesheet><link href=//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/themes/prism-solarizedlight.min.css rel=stylesheet><link href=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.css rel=stylesheet><link href=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.css rel=stylesheet><link rel=stylesheet href=https://gmt-china.org/css/style.css><link rel=stylesheet href=https://gmt-china.org/css/mobile.css><link rel="shortcut icon" href=https://gmt-china.org/images/favicon.ico type=image/x-icon type=image/png><link rel=icon href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon href=https://gmt-china.org/images/apple-touch-icon.png type=image/png><link rel=apple-touch-icon sizes=57x57 href=https://gmt-china.org/images/apple-touch-icon-57x57.png type=image/png><link rel=apple-touch-icon sizes=72x72 href=https://gmt-china.org/images/apple-touch-icon-72x72.png type=image/png><link rel=apple-touch-icon sizes=76x76 href=https://gmt-china.org/images/apple-touch-icon-76x76.png type=image/png><link rel=apple-touch-icon sizes=114x114 href=https://gmt-china.org/images/apple-touch-icon-114x114.png type=image/png><link rel=apple-touch-icon sizes=120x120 href=https://gmt-china.org/images/apple-touch-icon-120x120.png type=image/png><link rel=apple-touch-icon sizes=144x144 href=https://gmt-china.org/images/apple-touch-icon-144x144.png type=image/png><link rel=apple-touch-icon sizes=152x152 href=https://gmt-china.org/images/apple-touch-icon-152x152.png type=image/png><link rel=apple-touch-icon sizes=180x180 href=https://gmt-china.org/images/apple-touch-icon-180x180.png type=image/png><meta name=msapplication-TileImage content=https://gmt-china.org/images/apple-touch-icon-144x144.png><meta name=msapplication-TileColor content=#d83434></head><body><div class=container><header id=header><div class=outer><nav class="navbar navbar-default navbar-fixed-top"><div class=container-fluid><div class=navbar-header><button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#navbar-collapse-menu aria-expanded=false>
+<span class=sr-only>Toggle navigation</span>
+<span class=icon-bar></span><span class=icon-bar></span><span class=icon-bar></span></button>
+<a class=navbar-brand href=https://gmt-china.org/><span class=site-title>GMT 中文社区</span></a></div><div class="collapse navbar-collapse" id=navbar-collapse-menu><ul class="nav navbar-nav navbar-right"><li class=nav-item><a href=/>首页</a></li><li class=nav-item><a href=/docs/>文档</a></li><li class=nav-item><a href=/gallery/>图库</a></li><li class=nav-item><a href=/blog/>博客</a></li><li class=nav-item><a href=/example/>示例</a></li><li class=nav-item><a href=/datas/>数据集</a></li><li class=nav-item><a href=/download/>下载</a></li><li class=nav-item><a href=/authors/>贡献者</a></li><li class=nav-item><a href=/about/>关于</a></li><li class=nav-item><a href=/images/qq-group.jpg><i class="fa fa-qq fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=https://github.com/gmt-china><i class="fa fa-github fa-lg" aria-hidden=true></i></a></li><li class=nav-item><a href=mailto:admin@gmt-china.org><i class="fa fa-envelope fa-lg" aria-hidden=true></i></a></li><li><a href=https://gmt-china.org/index.xml><i class="fa fa-rss-square fa-lg" aria-hidden=true></i></a></li></ul></div></div></nav></div></header><div id=body><div class=outer><section id=main><article><div class=article-inner><header class=article-header><h1 class=article-title itemprop=name><a href=https://gmt-china.org/blog/google-maps-elevation-api/ class=permalink>利用 Google Maps 获取超高精度高程数据</a></h1><div class=article-meta><div class=article-category><i class="fa fa-sitemap"></i><a class=article-category-link href=https://gmt-china.org/categories/%E7%A7%91%E7%A0%94%E5%B7%A5%E5%85%B7/>科研工具</a></div><div class=article-category><i class="fa fa-tags"></i><a class=article-category-link href=https://gmt-china.org/tags/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/>数据下载</a></div><div class=article-category><i class="fa fa-user"></i><a class=article-category-link href=https://gmt-china.org/authors/SeisPider/>SeisPider</a></div><time class=article-date datetime="2017-09-14 00:00:00 &#43;0000 UTC" itemprop=datePublished>2017年09月14日</time></div></header><div class=article-body itemprop=articleBody><p>在绘制超小区域的地形图时，常需要超高精度的高程数据。</p><p>目前已知的公开高程数据中，ASTER GDEM的精度最高，为1弧秒，即约30米一个数据点。
+研究者可以通过 Google Maps Elevation API 获取米级精度的数据。</p><h2 id=数据简介>数据简介</h2><p>Google Maps Elevation API 提供地球表面所有位置的海拔高度数据，包括海床上的深度位
+置（此类位置返回负值）。</p><p>官方文档：</p><ul><li><a href="https://developers.google.com/maps/documentation/elevation/start?hl=zh-cn" target=_blank>入门指南</a></li><li><a href="https://developers.google.com/maps/documentation/elevation/intro?hl=zh-cn" target=_blank>开发人员指南</a></li></ul><h2 id=获取密钥-api-key>获取密钥 API KEY</h2><p>想要从Google Maps中获取地形数据，首先需要一个密钥。</p><ol><li>访问 <a href="https://developers.google.com/maps/documentation/elevation/start?hl=zh-cn" target=_blank>入门指南</a> 页面</li><li>点击右上角的“获取密钥”按钮（你可能需要翻墙才能获取密钥）</li></ol><p>限额说明：</p><ul><li>每个用户最多可能只能申请10个免费密钥</li><li>每个密钥每天2500次免费请求</li><li>每次请求最多512个位置</li><li>每秒最多50次请求</li></ul><h2 id=使用说明>使用说明</h2><h3 id=获取单点高程>获取单点高程</h3><p>通过简单的网络请求即可获取单点的高程：</p><pre><code>https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034&amp;key=YOUR_API_KEY
+</code></pre><p>其中：</p><ul><li><code>locations=39.7391536,-104.9847034</code> 指定了要获取高程的经纬度，纬度和经度之间用逗号分隔；</li><li><code>key=YOU_API_KEY</code> 指定了用户密钥，用户需要将自己申请的密钥替换 <code>YOU_API_KEY</code></li></ul><p>将上面的链接复制到浏览器中，即可得到返回值为::</p><pre><code>{
+   &quot;results&quot; : [
+        {
+            &quot;elevation&quot; : 1608.637939453125,
+            &quot;location&quot; : {
+                &quot;lat&quot; : 39.73915360,
+                &quot;lng&quot; : -104.98470340
+            },
+            &quot;resolution&quot; : 4.771975994110107
+        }
+   ],
+   &quot;status&quot; : &quot;OK&quot;
+}
+</code></pre><p>从中可以看到这一点的海拔高度是 1608.637939453125 米（小数点后几位可能都没有意义）。
+resolution给出了该点高程的分辨率值，即内插海拔高度的数据点之间的最大距离，以米为单位。</p><h3 id=获取多点高程>获取多点高程</h3><p>也可以在一次网络请求中获取多个点的高程，多个位置之间用 <code>|</code> 分隔即可。例如：</p><pre><code>https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034|36.455556,-116.866667&amp;key=YOUR_API_KEY
+</code></pre><p>但一次请求中的位置不能超过512个。</p><h3 id=批量获取高程>批量获取高程</h3><p>Google Maps 提供了多种客户端以实现批量获取高程。此处以<a href=https://github.com/googlemaps/google-maps-services-python/ target=_blank>Python客户端</a> 为例。</p><ol><li><p>安装 Google Map API 的 Python模块:</p><pre><code>$ pip install -U googlemaps
+</code></pre></li><li><p>获取免费密钥</p></li><li><p>参考如下脚本批量获取高程数据</p></li></ol><pre><code class=language-python>#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import googlemaps
+import numpy as np
+
+
+def request_elevation(xmin, xmax, xinc, ymin, ymax, yinc, maxnum=512):
+    &quot;&quot;&quot;Request elevation and return them with a list
+
+    Parameter
+    =========
+    xmin : float
+        minimum longitude, unit is degree
+    xmax : float
+        maximum longitude, unit is degree
+    xinc : float
+        increment of longitude
+
+    ymin : float
+        minimum latitude, unit is degree
+    ymax : float
+        maximum latitude, unit is degree
+    yinc : float
+        increment of latitude
+    maxnum : int
+        point number of one request, maximum value is 512
+    &quot;&quot;&quot;
+
+    xlist = np.arange(xmin, xmax, xinc)
+    ylist = np.arange(ymin, ymax, yinc)
+    points = [(y, x) for y in ylist for x in xlist]
+
+    requestnum = int(np.floor(len(points) / maxnum) + 1)
+    npoints = np.array_split(points, requestnum)
+    if requestnum &gt; 2500:
+        print(&quot;Error: Request number exceed! Change grid or region.&quot;)
+
+    return [gmaps.elevation(locations=loc.tolist()) for loc in npoints]
+
+
+# 设置要下载高程数据的经度范围、纬度范围以及网格间隔
+xmin, xmax, xinc = 120.000, 129.005, 0.00005
+ymin, ymax, yinc = 30.000, 30.005, 0.00005
+
+gmaps = googlemaps.Client(key='YOU_API_KEY')
+
+# Obtain all elevations
+# 请设置 maxnum 确保每一次请求的数据点数不超过 512 个以控制请求字符串长度
+elevations = request_elevation(xmin, xmax, xinc, ymin, ymax, yinc, maxnum=512)
+
+# output data with format `longitude   latitude elevation resolution`
+with open(&quot;Elevations.dat&quot;, &quot;w&quot;) as f:
+    for loclist in elevations:
+        for subloc in loclist:
+            outputstr = &quot;{:.5f}  {:.5f}  {:.5f}  {:.5f}\n&quot;.format(
+                subloc['location']['lng'],
+                subloc['location']['lat'],
+                subloc['elevation'],
+                subloc['resolution'])
+            f.writelines(outputstr)
+</code></pre></div><footer class=article-footer><div id=gitalk-container></div><link rel=stylesheet href=https://unpkg.com/gitalk/dist/gitalk.css><script src=https://unpkg.com/gitalk/dist/gitalk.min.js></script><script>var gitalk=new Gitalk({clientID:'33c0af3846f5099c3375',clientSecret:'89c589212198ac2c0967fe40719e404b269fab8a',owner:'gmt-china',repo:'gitalk',admin:['zhaozhiyuan1989','cehui07226','NothingIsBig','seisman','SeisPider','wangliang1989'],body:location.href,});gitalk.render('gitalk-container');</script></footer><nav><ul class=pager><li class=previous><a href=https://gmt-china.org/blog/community-guide/><strong class=article-nav-caption>上一篇</strong><div class=article-nav-title>GMT学习群入群须知</div></a></li><li class=next><a href=https://gmt-china.org/blog/GUD-20171017/><strong class=article-nav-caption>下一篇</strong><div class=article-nav-title>GMT 中文社区第三次线下聚餐</div></a></li></ul></nav></div></article></section></div></div><footer id=footer class=footer><div class=copyright>&copy; 2016 -
+<span itemprop=copyrightYear>2018</span>
+<span class=with-love><i class="fa fa-heart"></i></span><span class=author itemprop=copyrightHolder>GMT 中文社区</span></div><div class=powered-by>Powered by <a href=https://gohugo.io target=_blank>Hugo</a> &amp; Hosted by <a href=https://github.com/gmt-china/gmt-china.org target=_blank>GitHub</a>.</div></footer><script src=//cdn.bootcss.com/jquery/3.1.1/jquery.min.js></script><script src=//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/prism.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/components/prism-bash.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/plugins/line-numbers/prism-line-numbers.min.js></script><script src=//cdn.bootcss.com/clipboard.js/1.5.12/clipboard.js></script><script src=//cdn.bootcss.com/featherlight/1.5.0/featherlight.min.js></script><script src=//cdn.bootcss.com/prism/1.5.1/components/prism-python.min.js></script><script src=https://gmt-china.org/js/script.js></script></div></body></html>
